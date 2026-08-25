@@ -985,6 +985,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
                         {
                             "added": 0,
                             "reviewed": int(cached.get("result_count") or 0),
+                            "jobs": [],
                             "checked_at": cached["checked_at"],
                             "source_report": cached.get("source_report") or [],
                             "cached": True,
@@ -1006,6 +1007,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
                     {
                         "added": 0,
                         "reviewed": int(cached.get("result_count") or 0),
+                        "jobs": [],
                         "checked_at": cached["checked_at"],
                         "source_report": cached.get("source_report") or [],
                         "cached": True,
@@ -1047,6 +1049,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
             {
                 "added": added,
                 "reviewed": reviewed,
+                "jobs": candidates,
                 "checked_at": checked_at,
                 "source_report": source_report,
                 "cached": False,

@@ -267,6 +267,8 @@ class CareerCraftTests(unittest.TestCase):
             second = self.client.post("/api/jobs/discover", json=payload)
         self.assertEqual(first.status_code, 200)
         self.assertFalse(first.json["cached"])
+        self.assertEqual(first.json["reviewed"], 1)
+        self.assertEqual(first.json["jobs"][0]["title"], "QA Automation Engineer")
         self.assertEqual(second.status_code, 200)
         self.assertTrue(second.json["cached"])
         self.assertEqual(discover.call_count, 1)

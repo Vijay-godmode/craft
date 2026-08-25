@@ -670,6 +670,38 @@
     if (list.children.length) container.append(list);
   }
 
+  function renderLatestSearchResults(jobs, market) {
+    const panel = $('#searchResultsPanel');
+    const list = $('#latestSearchList');
+    const count = $('#latestSearchCount');
+    const status = $('#latestSearchStatus');
+    if (!panel || !list || !count || !status) return;
+    clear(list);
+    panel.hidden = false;
+    count.textContent = `${jobs.length} ${jobs.length === 1 ? 'role' : 'roles'}`;
+    status.textContent = `Latest live results for ${market || 'your selected market'}. Review each original listing before saving it to the approval queue.`;
+    jobs.slice(0, 30).forEach((job) => {
+      const card = node('article', { className: 'latest-search-card' });
+      card.append(node('h3', { text: job.title || 'Untitled role' }));
+      card.append(node('p', { className: 'job-meta', text: [job.company, job.location, job.source].filter(Boolean).join(' / ') }));
+      card.append(node('p', { className: 'job-insight', text: (job.description || '').slice(0, 260) }));
+      const actions = node('div', { className: 'job-actions' });
+      if (job.source_url) actions.append(node('a', { className: 'text-button', href: job.source_url, target: '_blank', rel: 'noopener noreferrer', text: 'Open original listing' }));
+      const save = node('button', { className: 'button button-small button-primary', type: 'button', text: 'Save to review queue' });
+      save.addEventListener('click', async () => {
+        save.disabled = true;
+        try {
+          const result = await api('/api/jobs', { method: 'POST', body: job });
+          save.textContent = result.created ? 'Saved to review queue' : 'Already in review queue';
+          toast(result.message || 'Role saved.');
+        } catch (error) { toast(error.message, 'error'); save.disabled = false; }
+      });
+      actions.append(save);
+      card.append(actions);
+      list.append(card);
+    });
+  }
+
   async function refreshWatchedJobs({ silent = false, forceRefresh = false } = {}) {
     const summary = $('#queueRefreshSummary');
     if (summary && !silent) {
@@ -681,6 +713,7 @@
       if (!silent) toast(data.message);
       const cachedLabel = data.cached ? 'Saved search' : 'Live refresh';
       renderSourceReport(data.source_report, `${cachedLabel}: ${formatDate(data.checked_at)}`);
+      if (!data.cached) renderLatestSearchResults(data.jobs || [], discoveryPayload().market);
       const visibleCount = await loadJobs(window.currentJobFilter || 'new');
       if (summary) {
         summary.hidden = false;

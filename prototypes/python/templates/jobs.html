@@ -45,6 +45,19 @@
   </article>
 </section>
 
+<section class="surface-card latest-search-results" id="searchResultsPanel" hidden aria-labelledby="latestSearchHeading">
+  <div class="latest-search-header">
+    <div>
+      <p class="eyebrow">LATEST PUBLIC SEARCH</p>
+      <h2 id="latestSearchHeading">Matching opportunities</h2>
+    </div>
+    <span class="latest-search-count" id="latestSearchCount">0 roles</span>
+  </div>
+  <p class="latest-search-status" id="latestSearchStatus" aria-live="polite"></p>
+  <div class="latest-search-list" id="latestSearchList"></div>
+  <div class="latest-search-actions"><button class="button button-secondary button-small" id="latestSearchQueueButton" type="button">View new-review inbox</button></div>
+</section>
+
 <section class="section-header compact queue-heading"><div><p class="eyebrow">APPROVAL QUEUE</p><h2>Opportunities ready for review</h2></div><div class="filter-tabs" aria-label="Filter jobs"><button class="filter-tab active" data-job-filter="new" type="button">New</button><button class="filter-tab" data-job-filter="approved" type="button">Approved</button><button class="filter-tab" data-job-filter="all" type="button">Active</button><button class="filter-tab" data-job-filter="closed" type="button">Closed</button></div></section>
 <p class="queue-refresh-summary" id="queueRefreshSummary" hidden aria-live="polite"></p>
 <section class="job-list" id="jobsList" aria-live="polite"><div class="empty-state"><span class="empty-icon">J</span><h3>Loading jobs inbox...</h3></div></section>
