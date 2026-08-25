@@ -1,0 +1,14 @@
+services:
+  careercraft:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      RESUME_SECRET_KEY: ${RESUME_SECRET_KEY:?Set RESUME_SECRET_KEY in your environment or .env file}
+      RESUME_DB_PATH: /data/careercraft.db
+    volumes:
+      - careercraft-data:/data
+    restart: unless-stopped
+
+volumes:
+  careercraft-data:

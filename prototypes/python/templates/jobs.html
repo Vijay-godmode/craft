@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - Jobs inbox{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div>
+    <p class="eyebrow">JOBS INBOX</p>
+    <h1>Discover, then <em>decide</em>.</h1>
+    <p class="lede">A QA-focused inbox for manual testing, QA automation, SDET, API, performance, mobile, and accessibility roles. You approve every next step; this workspace never applies for you.</p>
+  </div>
+  <button class="button button-secondary" id="enableJobsNotifications" type="button">Enable browser alerts</button>
+</section>
+
+<section class="job-source-grid">
+  <article class="surface-card source-card discovery-card">
+    <div class="card-title-row"><div><p class="eyebrow">MULTI-SOURCE DISCOVERY</p><h2>QA and Test Engineer roles</h2></div><span class="source-badge">PUBLIC FEEDS</span></div>
+    <p>Source-attributed public job APIs plus selected product-company career boards. India is the default scope; choose Worldwide to review every matching remote or international role. Results are ranked by QA fit, public product-board signal, and disclosed salary - not by a claimed Glassdoor score or package guarantee.</p>
+    <form id="discoverJobsForm" class="discovery-form">
+      <label>Search focus<input id="jobQuery" value="qa test engineer" placeholder="QA Automation Engineer"></label>
+      <label>India scope<select id="marketFilter"><option value="India">India only</option><option value="India / Remote">India / remote</option><option value="Worldwide">Worldwide</option></select></label>
+      <label>Role track<select id="roleTrackFilter"><option>All QA tracks</option><option>Test Engineer</option><option>Manual QA</option><option>QA Automation</option><option>SDET</option><option>API Testing</option><option>Performance Testing</option><option>Mobile Testing</option><option>Accessibility Testing</option></select></label>
+      <div class="source-options">
+        <label class="watch-control"><input id="productOnly" type="checkbox"> Product-company public boards only</label>
+        <label class="watch-control"><input id="salaryOnly" type="checkbox"> Salary disclosed only</label>
+        <label class="watch-control"><input id="watchJobs" type="checkbox"> Check every six hours while this page is open</label>
+      </div>
+      <div class="form-actions"><button class="button button-primary" type="submit">Refresh QA roles</button><button class="button button-secondary" id="showSourcesButton" type="button">Show sources</button></div>
+    </form>
+    <div class="source-report" id="sourceReport" hidden aria-live="polite"></div>
+    <details class="google-search-help"><summary>Google web search handoff</summary><p>Use the targeted Google search below to review employer-board results. Google does not provide a safe browser feed for this app to ingest, so CareerCraft never scrapes or claims to auto-import Google pages. Copy a selected job's URL and description into the manual form below, or use the public APIs above for automatic inbox results.</p><a id="googleSearchLink" class="text-link" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=qa+test+engineer+jobs+India">Open targeted Google search &rarr;</a></details>
+    <p class="fine-print">Manual refreshes always keep previous results in the inbox. Automatic checks use a short saved-result cache to avoid repeated provider requests. Google web search is a review-and-import handoff; the public job feeds work automatically without credentials.</p>
+  </article>
+
+  <article class="surface-card source-card linkedin-card">
+    <div class="card-title-row"><div><p class="eyebrow">LINKEDIN, ON YOUR TERMS</p><h2>Bring roles into this inbox.</h2></div><span class="icon-disc blue">in</span></div>
+    <p>Live LinkedIn listings are not scraped here. Search by role/company on LinkedIn, then paste a role or import a user-exported CSV/JSON file and it will appear in this same approval queue.</p>
+    <form id="linkedinManualForm" class="compact-job-form">
+      <label>Job title<input id="linkedinTitle" placeholder="Senior QA Automation Engineer"></label>
+      <label>Company<input id="linkedinCompany" placeholder="Company name"></label>
+      <label class="span-two">Original listing URL<input id="linkedinUrl" type="url" placeholder="https://www.linkedin.com/jobs/view/..." required></label>
+      <label class="span-two">Job description<textarea id="linkedinDescription" rows="4" placeholder="Paste the main responsibilities and requirements so the resume can be tailored accurately." required></textarea></label>
+      <div class="form-actions"><button class="button button-secondary" type="submit">Add LinkedIn role to inbox</button><button class="text-button" id="importJobsButton" type="button">Import jobs CSV / JSON</button></div>
+    </form>
+    <input id="jobsImportInput" type="file" accept=".csv,.json,application/json,text/csv" hidden>
+    <details class="native-alerts"><summary>Use LinkedIn's own job alerts</summary><div class="inline-form"><input id="linkedinQuery" value="QA Engineer" aria-label="LinkedIn QA role query"><a id="linkedinAlertLink" class="button button-dark" target="_blank" rel="noopener noreferrer" href="https://www.linkedin.com/jobs/search/?keywords=QA%20Engineer">Open native alert setup</a></div></details>
+  </article>
+</section>
+
+<section class="section-header compact queue-heading"><div><p class="eyebrow">APPROVAL QUEUE</p><h2>Opportunities ready for review</h2></div><div class="filter-tabs" aria-label="Filter jobs"><button class="filter-tab active" data-job-filter="new" type="button">New</button><button class="filter-tab" data-job-filter="approved" type="button">Approved</button><button class="filter-tab" data-job-filter="all" type="button">Active</button><button class="filter-tab" data-job-filter="closed" type="button">Closed</button></div></section>
+<p class="queue-refresh-summary" id="queueRefreshSummary" hidden aria-live="polite"></p>
+<section class="job-list" id="jobsList" aria-live="polite"><div class="empty-state"><span class="empty-icon">J</span><h3>Loading jobs inbox...</h3></div></section>
+{% endblock %}

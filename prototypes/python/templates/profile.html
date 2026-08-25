@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - Master profile{% endblock %}
+{% block content %}
+<section class="page-heading split-heading">
+  <div>
+    <p class="eyebrow">MASTER PROFILE</p>
+    <h1>Your facts, kept <em>permanent</em>.</h1>
+    <p class="lede">Start with the QA template or import your own resume. Review every field before saving: this profile is the only source used for tailored Word resumes.</p>
+  </div>
+  <aside class="completion-pill" id="profileCompletionPill"><span>Profile completion</span><strong>-</strong></aside>
+</section>
+
+<section class="profile-tools surface-card" aria-label="Profile starter, import, export, and local review tools">
+  <div class="profile-tools-copy">
+    <p class="eyebrow">STARTER AND PORTABILITY</p>
+    <h2>Build from a professional QA foundation.</h2>
+    <p id="starterNotice">The starter covers manual testing, automation, API testing, and SDET-ready evidence. It never uses a fabricated identity.</p>
+  </div>
+  <div class="tool-actions">
+    <button class="button button-primary" id="loadStarterButton" type="button">Load QA starter</button>
+    <a class="button button-secondary" href="/api/resumes/starter">Download starter .docx</a>
+    <button class="button button-secondary" id="importProfileButton" type="button">Import profile JSON</button>
+    <button class="button button-secondary" id="importResumeButton" type="button">Import resume file</button>
+    <a class="button button-secondary" href="/api/profile/export">Export profile JSON</a>
+  </div>
+  <input id="profileJsonInput" type="file" accept="application/json,.json" hidden>
+  <input id="resumeImportInput" type="file" accept=".docx,.pdf,.txt" hidden>
+</section>
+
+<section class="ai-inline surface-card" aria-labelledby="profileAiTitle">
+  <div>
+    <p class="eyebrow">LOCAL AI REVIEW</p>
+    <h2 id="profileAiTitle">Improve wording without sending your resume to a cloud service.</h2>
+    <p>Uses Ollama on this laptop when it is available; otherwise a labelled built-in spelling and clarity review is used.</p>
+  </div>
+  <div class="tool-actions"><button class="button button-secondary" id="proofreadSummaryButton" type="button">Proofread summary</button></div>
+  <div class="ai-result" id="profileAiResult" hidden aria-live="polite"></div>
+</section>
+
+<form id="profileForm" class="profile-form">
+  <section class="form-section surface-card">
+    <div class="section-title"><span class="step-number">01</span><div><h2>Contact and direction</h2><p>Shown in the document body so parsing systems can read it.</p></div></div>
+    <div class="form-grid two-col">
+      <label>Full name<input id="fullName" name="full_name" autocomplete="name" placeholder="Your full name" required></label>
+      <label>Professional headline<input id="headline" name="headline" placeholder="QA Engineer | Automation and API Testing"></label>
+      <label>Email<input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
+      <label>Phone<input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+91 00000 00000"></label>
+      <label>Location<input id="location" name="location" autocomplete="address-level2" placeholder="City, State / Remote"></label>
+      <label>LinkedIn profile URL<input id="linkedinUrl" name="linkedin_url" type="url" placeholder="https://www.linkedin.com/in/your-name"></label>
+      <label class="span-two">Portfolio / GitHub URL<input id="portfolioUrl" name="portfolio_url" type="url" placeholder="https://github.com/your-name"></label>
+    </div>
+  </section>
+
+  <section class="form-section surface-card">
+    <div class="section-title"><span class="step-number">02</span><div><h2>Summary and verified skills</h2><p>Use the terms employers use only where they are factually true.</p></div></div>
+    <div class="form-grid">
+      <label>Professional summary<textarea id="summary" name="summary" rows="4" placeholder="2-4 factual lines describing your QA focus, impact, and tools."></textarea></label>
+      <label>Verified skills <span class="field-hint">Separate with commas or new lines</span><textarea id="skills" name="skills" rows="3" placeholder="Manual Testing, Selenium, API Testing, Postman, SQL, Jira"></textarea></label>
+    </div>
+  </section>
+
+  <section class="form-section surface-card">
+    <div class="section-title with-action"><div class="section-title-inner"><span class="step-number">03</span><div><h2>Experience</h2><p>Use achievement bullets with scope, tools, and measurable outcomes where possible.</p></div></div><button class="button button-secondary" type="button" id="addExperience">+ Add experience</button></div>
+    <div id="experienceList" class="entry-list"></div>
+    <p class="inline-empty" id="experienceEmpty">No experience entries yet. Add your current or most relevant role.</p>
+  </section>
+
+  <section class="form-section surface-card">
+    <div class="section-title with-action"><div class="section-title-inner"><span class="step-number">04</span><div><h2>Education and credentials</h2><p>Keep dates and official certification names clear.</p></div></div><button class="button button-secondary" type="button" id="addEducation">+ Add education</button></div>
+    <div id="educationList" class="entry-list compact-list"></div>
+    <label class="top-gap">Certifications <span class="field-hint">One per line</span><textarea id="certifications" rows="3" placeholder="ISTQB Certified Tester&#10;Certified ScrumMaster"></textarea></label>
+  </section>
+
+  <section class="form-section surface-card">
+    <div class="section-title with-action"><div class="section-title-inner"><span class="step-number">05</span><div><h2>Projects</h2><p>Optional evidence for tools or testing approaches you genuinely used.</p></div></div><button class="button button-secondary" type="button" id="addProject">+ Add project</button></div>
+    <div id="projectList" class="entry-list"></div>
+  </section>
+
+  <div class="sticky-save"><span id="profileSaveStatus">Your data stays local in this workspace until you choose an external tool.</span><button class="button button-primary" type="submit">Save master profile <span aria-hidden="true">&rarr;</span></button></div>
+</form>
+<template id="experienceTemplate">
+  <article class="entry-card experience-entry">
+    <div class="entry-card-top"><strong>Experience</strong><button type="button" class="text-button danger remove-entry">Remove</button></div>
+    <div class="form-grid two-col">
+      <label>Job title<input data-field="title" placeholder="QA Engineer"></label><label>Company<input data-field="company" placeholder="Company name"></label>
+      <label>Location<input data-field="location" placeholder="City / Remote"></label><label>Start date<input data-field="start_date" placeholder="Jan 2023"></label>
+      <label>End date<input data-field="end_date" placeholder="Present or Dec 2025"></label><label class="checkbox-label"><input data-field="current" type="checkbox"> I currently work here</label>
+      <label class="span-two">Achievement bullets <span class="field-hint">One per line</span><textarea data-field="bullets" rows="4" placeholder="Built...&#10;Reduced...&#10;Collaborated..."></textarea></label>
+    </div>
+  </article>
+</template>
+<template id="educationTemplate">
+  <article class="entry-card education-entry"><div class="entry-card-top"><strong>Education</strong><button type="button" class="text-button danger remove-entry">Remove</button></div><div class="form-grid two-col"><label>Degree / qualification<input data-field="degree" placeholder="B.Tech, Computer Science"></label><label>School / university<input data-field="school" placeholder="Institution"></label><label>Location<input data-field="location" placeholder="City"></label><label>Graduation<input data-field="graduation" placeholder="2024"></label></div></article>
+</template>
+<template id="projectTemplate">
+  <article class="entry-card project-entry"><div class="entry-card-top"><strong>Project</strong><button type="button" class="text-button danger remove-entry">Remove</button></div><div class="form-grid two-col"><label>Project name<input data-field="name" placeholder="API Regression Suite"></label><label>Project URL (optional)<input data-field="url" type="url" placeholder="https://example.com"></label><label class="span-two">Description<textarea data-field="description" rows="2" placeholder="What you built or tested, and why it mattered."></textarea></label><label class="span-two">Evidence bullets <span class="field-hint">One per line</span><textarea data-field="bullets" rows="3" placeholder="Automated...&#10;Documented..."></textarea></label></div></article>
+</template>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft — Overview{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div>
+    <p class="eyebrow">DASHBOARD</p>
+    <h1>Move from profile to <em>prepared</em>.</h1>
+    <p class="lede">Keep one factual master profile, then create a clean, role-specific Word resume when a promising QA role appears.</p>
+  </div>
+  <a class="button button-primary" href="/profile">Complete profile <span aria-hidden="true">→</span></a>
+</section>
+
+<section class="dashboard-grid">
+  <article class="profile-card surface-card" id="profileProgressCard">
+    <div class="card-topline"><span class="icon-disc blue">◎</span><span class="chip chip-neutral" id="profileProgressLabel">Loading</span></div>
+    <h2>Your master profile</h2>
+    <p>Permanent facts are stored once. Tailoring only prioritises verified skills and evidence.</p>
+    <div class="progress-track"><span id="profileProgressBar" style="width: 0%"></span></div>
+    <div class="card-footer"><span id="profileProgressText">Checking profile…</span><a href="/profile">Edit facts →</a></div>
+  </article>
+
+  <article class="score-card surface-card">
+    <div class="card-topline"><span class="icon-disc teal">✦</span><span class="subtle-label">READY WHEN YOU ARE</span></div>
+    <h2>Role-specific, never made up.</h2>
+    <p>Paste a job description and see matched requirements, honest gaps, and a professional DOCX preview before you export.</p>
+    <a class="text-link" href="/builder">Tailor a resume <span aria-hidden="true">→</span></a>
+  </article>
+</section>
+
+<section class="metric-grid" aria-label="Workspace metrics">
+  <article class="metric-card"><span>New roles</span><strong id="metricNewJobs">—</strong><a href="/jobs">Review inbox</a></article>
+  <article class="metric-card"><span>Approved</span><strong id="metricApproved">—</strong><a href="/applications">Track progress</a></article>
+  <article class="metric-card"><span>Applied</span><strong id="metricApplied">—</strong><a href="/applications">View pipeline</a></article>
+  <article class="metric-card"><span>Word versions</span><strong id="metricVersions">—</strong><a href="/builder#versions">Resume library</a></article>
+</section>
+
+<section class="section-header compact">
+  <div><p class="eyebrow">JOB ACTIVITY</p><h2>Recent opportunities</h2></div>
+  <a class="text-link" href="/jobs">Open jobs inbox →</a>
+</section>
+<section class="job-list dashboard-jobs" id="dashboardJobs" aria-live="polite">
+  <div class="empty-state"><span class="empty-icon">⌁</span><h3>No roles saved yet</h3><p>Bring in a role from the Jobs inbox or paste a job description to begin.</p><a class="button button-secondary" href="/jobs">Explore QA roles</a></div>
+</section>
+{% endblock %}

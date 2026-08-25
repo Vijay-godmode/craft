@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - Applications{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div>
+    <p class="eyebrow">APPLICATIONS</p>
+    <h1>Keep your search <em>intentional</em>.</h1>
+    <p class="lede">Track online applications alongside walk-ins, referrals, recruiter conversations, and campus drives in one private pipeline.</p>
+  </div>
+  <a class="button button-secondary" href="/jobs">Review new jobs</a>
+</section>
+
+<section class="surface-card google-search-panel" aria-labelledby="applicationGoogleSearchTitle">
+  <div class="card-title-row"><div><p class="eyebrow">GOOGLE WEB SEARCH</p><h2 id="applicationGoogleSearchTitle">Find a role, then track it</h2></div><span class="source-badge">REVIEW AND IMPORT</span></div>
+  <p>Build a targeted Google search for QA roles on employer boards. Open the results, choose a genuine opportunity, and paste its URL and requirements into the form below. Google pages are not scraped automatically.</p>
+  <div class="form-grid two-col compact-fields">
+    <label>Search focus<input id="applicationGoogleQuery" value="QA test engineer" placeholder="QA Automation Engineer"></label>
+    <label>Market<input id="applicationGoogleMarket" value="India" placeholder="India or Remote"></label>
+    <label>Role track<select id="applicationGoogleTrack"><option>All QA tracks</option><option>Test Engineer</option><option>Manual QA</option><option>QA Automation</option><option>SDET</option><option>API Testing</option><option>Performance Testing</option><option>Mobile Testing</option><option>Accessibility Testing</option></select></label>
+  </div>
+  <a id="applicationGoogleSearchLink" class="button button-secondary" target="_blank" rel="noopener noreferrer" href="https://www.google.com/search?q=QA%20test%20engineer%20jobs%20India">Open targeted Google search <span aria-hidden="true">&rarr;</span></a>
+</section>
+
+<section class="manual-application surface-card" aria-labelledby="manualApplicationTitle">
+  <div class="card-title-row">
+    <div><p class="eyebrow">MANUAL TRACKING</p><h2 id="manualApplicationTitle">Add a walk-in, referral, or direct opportunity</h2></div>
+    <span class="icon-disc teal">+</span>
+  </div>
+  <form id="manualApplicationForm" class="manual-application-form">
+    <div class="form-grid two-col compact-fields">
+      <label>Role title<input id="manualApplicationTitleInput" placeholder="QA Automation Engineer" required></label>
+      <label>Company<input id="manualApplicationCompany" placeholder="Company name"></label>
+      <label>Application type<select id="manualApplicationKind"><option>Manual application</option><option>Walk-in</option><option>Referral</option><option>Recruiter outreach</option><option>Campus drive</option></select></label>
+      <label>Status<select id="manualApplicationStatus"><option value="approved">Planning / approved</option><option value="applied">Applied</option><option value="interview">Interview</option><option value="offer">Offer</option></select></label>
+      <label>Location<input id="manualApplicationLocation" placeholder="Bengaluru / Remote"></label>
+      <label>Role track<select id="manualApplicationTrack"><option>Test Engineer</option><option>Manual QA</option><option>QA Automation</option><option>SDET</option><option>API Testing</option><option>Performance Testing</option><option>Mobile Testing</option><option>Accessibility Testing</option></select></label>
+      <label class="span-two">Application / job link (optional)<input id="manualApplicationUrl" type="url" placeholder="https://company.example/careers/job"></label>
+      <label class="span-two">Job requirements or context (optional)<textarea id="manualApplicationDescription" rows="3" placeholder="Paste a job description, walk-in details, or referral context for tailoring later."></textarea></label>
+    </div>
+    <button class="contact-expand-button" id="toggleContactFields" type="button" aria-expanded="false"><span aria-hidden="true">+</span> Add HR / recruiter or referral details</button>
+    <div class="manual-contact-fields" id="manualContactFields" hidden>
+      <div class="form-grid two-col compact-fields">
+        <label>HR / recruiter name<input id="manualContactName" placeholder="Contact name"></label>
+        <label>Role / team<input id="manualContactRole" placeholder="Talent Acquisition"></label>
+        <label>Email<input id="manualContactEmail" type="email" placeholder="hr@company.com"></label>
+        <label>Phone<input id="manualContactPhone" type="tel" placeholder="+91 00000 00000"></label>
+        <label>Referral name<input id="manualReferralName" placeholder="Referrer's name"></label>
+        <label>Referral contact<input id="manualReferralContact" placeholder="Email or phone"></label>
+        <label class="span-two">Next step / follow-up<textarea id="manualNextStep" rows="2" placeholder="Follow up on Friday, send portfolio, or note the interview slot."></textarea></label>
+      </div>
+    </div>
+    <label class="top-gap">Private notes<textarea id="manualApplicationNotes" rows="2" placeholder="Your private notes only."></textarea></label>
+    <div class="form-actions"><button class="button button-primary" type="submit">Add to pipeline</button></div>
+  </form>
+</section>
+
+<section class="pipeline-legend"><span><i class="legend-dot approved"></i>Approved</span><span><i class="legend-dot applied"></i>Applied</span><span><i class="legend-dot interview"></i>Interview</span><span><i class="legend-dot offer"></i>Offer</span></section>
+<section class="applications-list surface-card" id="applicationsList"><div class="empty-state"><span class="empty-icon">A</span><h3>Loading application pipeline...</h3></div></section>
+{% endblock %}

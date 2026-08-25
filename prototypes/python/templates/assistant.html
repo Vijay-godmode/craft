@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - Local AI workspace assistant{% endblock %}
+{% block content %}
+<section class="page-heading assistant-heading">
+  <p class="eyebrow">LOCAL AI WORKSPACE ASSISTANT</p>
+  <h1>Chat with your <em>local AI</em>.</h1>
+  <p class="lede">Ask about your resume workspace or request a safe source tweak. Proposals are always reviewed and confirmed before anything changes.</p>
+</section>
+
+<section class="assistant-chat-shell surface-card" aria-label="Local AI conversation">
+  <header class="assistant-chat-header">
+    <span class="assistant-avatar" aria-hidden="true">AI</span>
+    <div><h2>CareerCraft local AI</h2><p id="assistantAiStatus">Checking local Ollama...</p></div>
+    <a class="text-link" href="/resources">AI settings &rarr;</a>
+  </header>
+  <div class="chat-messages" id="workspaceChatResult" aria-live="polite">
+    <div class="chat-bubble assistant-bubble"><p class="chat-sender">CareerCraft local AI</p><p>Hi! Ask for resume help, a spelling review, or a small workspace improvement. I use Ollama on this device and will only propose source edits for your approval.</p></div>
+  </div>
+  <form id="workspaceChatForm" class="chat-composer">
+    <label class="sr-only" for="workspaceChatInput">Message CareerCraft local AI</label>
+    <textarea id="workspaceChatInput" rows="1" maxlength="5000" placeholder="Message CareerCraft local AI..."></textarea>
+    <button class="button button-primary chat-send" id="workspaceChatSubmit" type="submit">Send <span aria-hidden="true">&rarr;</span></button>
+  </form>
+  <p class="chat-safety-note">Source-only scope. No secrets, database access, shell commands, web browsing, LinkedIn scraping, or auto-apply actions.</p>
+</section>
+{% endblock %}

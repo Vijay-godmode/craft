@@ -1,0 +1,12 @@
+{
+  "name": "resume-builder-prototypes",
+  "version": "0.1.0",
+  "description": "Minimal Node prototypes for skill extraction and scoring",
+  "main": "skillExtractor.js",
+  "scripts": {
+    "start": "node skillExtractor.js"
+  },
+  "dependencies": {
+    "pdf-parse": "^1.1.1"
+  }
+}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - Tailor resume{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div>
+    <p class="eyebrow">TAILOR RESUME</p>
+    <h1>A better match, <em>without fiction</em>.</h1>
+    <p class="lede">Paste the actual job description. We map it to your stored evidence, prioritise matching skills, show honest gaps, and generate an ATS-safe Word file.</p>
+  </div>
+  <a class="button button-secondary" href="/profile">Edit master facts</a>
+</section>
+
+<section class="builder-layout">
+  <article class="surface-card job-input-card">
+    <div class="card-title-row"><div><p class="eyebrow">STEP 1</p><h2>Target a role</h2></div><span class="icon-disc blue">J</span></div>
+    <form id="analyzeForm">
+      <div class="form-grid two-col compact-fields">
+        <label>Role title<input id="builderTitle" placeholder="QA Automation Engineer"></label>
+        <label>Company<input id="builderCompany" placeholder="Company name"></label>
+        <label class="span-two">Job link <span class="field-hint">Stored for your reference; never scraped</span><input id="builderUrl" type="url" placeholder="https://company.com/careers/role"></label>
+        <label class="span-two">Word layout <span class="field-hint">All options stay single-column and ATS-safe</span><select id="builderTemplate"><option value="classic">Classic ATS - centered, conventional</option><option value="compact">Compact QA - denser, left aligned</option><option value="modern">Modern single-column - clean accent, left aligned</option></select></label>
+        <div class="span-two builder-template-grid" aria-label="Resume layout suggestions">
+          <button class="builder-template-choice selected" type="button" data-resume-layout="classic"><span class="template-preview classic-preview" aria-hidden="true"></span><strong>Classic ATS</strong><small>Best default for product-company applications.</small></button>
+          <button class="builder-template-choice" type="button" data-resume-layout="compact"><span class="template-preview compact-preview" aria-hidden="true"></span><strong>Compact QA</strong><small>Denser one-page layout for experience-heavy roles.</small></button>
+          <button class="builder-template-choice" type="button" data-resume-layout="modern"><span class="template-preview modern-preview" aria-hidden="true"></span><strong>Modern single-column</strong><small>Clean accent without columns or graphics.</small></button>
+        </div>
+        <label class="span-two">Job description<textarea id="builderDescription" rows="12" placeholder="Paste the complete responsibilities, required skills, and preferred qualifications here." required></textarea></label>
+      </div>
+      <div class="form-actions"><button class="button button-primary" type="submit">Analyse requirements <span aria-hidden="true">&rarr;</span></button><button class="button button-secondary" id="saveJobButton" type="button" disabled>Save to jobs inbox</button></div>
+    </form>
+  </article>
+
+  <aside class="surface-card builder-side-note">
+    <span class="icon-disc teal">OK</span>
+    <h3>Truth-first tailoring</h3>
+    <p>Matched terms must already appear in your master profile. Missing requirements are shown as gaps, not silently inserted into the resume.</p>
+    <a class="text-link" href="/resources">How the match signal works &rarr;</a>
+  </aside>
+</section>
+
+<section class="analysis-wrap" id="analysisWrap" hidden>
+  <div class="analysis-heading"><div><p class="eyebrow">STEP 2</p><h2>Review the role match</h2></div><p class="analysis-disclaimer" id="analysisDisclaimer"></p></div>
+  <div class="analysis-grid">
+    <article class="surface-card score-overview"><span class="subtle-label">JOB MATCH</span><strong id="jobMatchScore">0%</strong><p>Weighted requirement coverage based on verified evidence.</p><div class="mini-score"><span>ATS readability</span><b id="readabilityScore">0%</b></div></article>
+    <article class="surface-card requirement-card"><div class="card-title-row"><h3>Verified match</h3><span id="matchedCount" class="chip chip-positive">0 matched</span></div><div class="chips" id="matchedSkills"></div><div class="evidence-list" id="evidenceList"></div></article>
+    <article class="surface-card requirement-card"><div class="card-title-row"><h3>Honest gaps</h3><span id="missingCount" class="chip chip-warning">0 gaps</span></div><div class="chips" id="missingSkills"></div><p class="callout-warning">Only add a requirement when you have real experience, training, or project evidence to support it.</p></article>
+  </div>
+  <article class="surface-card guidance-card"><h3>Recommended next actions</h3><ul id="guidanceList"></ul></article>
+
+  <div class="analysis-heading export-heading"><div><p class="eyebrow">STEP 3</p><h2>Export a professional Word resume</h2><p class="lede small">Single column, standard typography, real headings and bullets - no tables, columns, text boxes, or hidden keyword stuffing.</p></div><div class="tool-actions"><button id="aiResumeReviewButton" class="button button-secondary" type="button">Run local AI scan</button><button id="generateResumeButton" class="button button-primary" type="button">Download .docx</button></div></div>
+  <article class="resume-preview surface-card" id="resumePreview" aria-label="Tailored resume preview"></article>
+  <article class="ai-result surface-card" id="builderAiResult" hidden aria-live="polite"></article>
+</section>
+
+<section class="section-header compact" id="versions"><div><p class="eyebrow">RESUME LIBRARY</p><h2>Recent Word versions</h2></div></section>
+<section class="versions-list surface-card" id="resumeVersions"><p class="muted">Loading resume versions...</p></section>
+{% endblock %}

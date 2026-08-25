@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resume Builder — Prototype</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="site-hero">
+    <div class="hero-inner">
+      <h1 class="brand">Resume Builder</h1>
+      <p class="tag">ATS-aware resume scoring and role-specific skill detection</p>
+    </div>
+    <svg class="hero-wave" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden>
+      <path d="M0,40 C360,80 1080,0 1440,40 L1440 80 L0 80 Z" fill="currentColor" opacity="0.06"></path>
+    </svg>
+  </header>
+
+  <main class="page">
+    <section class="panel animated-card">
+      <div class="panel-grid">
+        <div class="left">
+          <h2>Match resume to a job posting</h2>
+          <p class="muted">Paste a job posting or a LinkedIn job description and upload your resume. Get a score, suggestions, and ATS checks.</p>
+
+          <form id="matchForm" enctype="multipart/form-data" class="form">
+            <label class="field-label">Job posting text or URL</label>
+            <textarea id="postingText" name="posting_text" rows="6" placeholder="Paste job posting text here"></textarea>
+
+            <label class="field-label">Resume text (paste) or upload</label>
+            <textarea id="resumeText" name="resume_text" rows="6" placeholder="Paste resume text here"></textarea>
+
+            <div class="file-row">
+              <input type="file" id="resumeFile" name="file" accept=".txt,.pdf,.docx" />
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn primary">Score Resume</button>
+              <button type="button" id="saveBtn" class="btn ghost">Save Locally</button>
+              <a class="link" href="/resumes">View Saved Resumes</a>
+            </div>
+          </form>
+        </div>
+
+        <aside class="right">
+          <div id="result" class="result-card">
+            <div class="empty-state">Results will appear here after scoring.</div>
+          </div>
+
+          <div class="chat-card">
+            <h3>Assistant</h3>
+            <div class="chat-messages" id="chatMessages">
+              <div class="chat-empty">Ask questions about the resume or job posting.</div>
+            </div>
+            <div class="chat-controls">
+              <label class="include-resume"><input type="checkbox" id="includeResume"/> Include selected resume</label>
+              <select id="resumeSelect">
+                <option value="">-- select saved resume --</option>
+              </select>
+            </div>
+            <div class="chat-input">
+              <input id="chatText" placeholder="Ask me about this resume..." />
+              <button id="chatSend" class="btn primary">Send</button>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer muted">Prototype • Local only • No external sharing</footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

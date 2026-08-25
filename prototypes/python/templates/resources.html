@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - Guides and checks{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">GUIDES AND CHECKS</p>
+  <h1>Use tools as <em>second opinions</em>.</h1>
+  <p class="lede">The local Job Match signal helps you prepare. External services are optional manual checks - never upload a resume unless you are comfortable sharing it with that service.</p>
+</section>
+
+<section class="resource-grid">
+  <article class="surface-card resource-card"><span class="icon-disc teal">DOCX</span><p class="eyebrow">IN THIS WORKSPACE</p><h2>ATS-safe Word export</h2><p>Generates a clean single-column DOCX with standard sections, normal text, and real paragraph bullets. This supports readability; it cannot guarantee an employer's ATS decision.</p><a class="text-link" href="/builder">Create a tailored version &rarr;</a></article>
+  <article class="surface-card resource-card local-ai-card"><span class="icon-disc blue">AI</span><p class="eyebrow">ON-DEVICE REVIEW</p><h2>Optional lightweight local AI</h2><p id="aiStatus">Checking the local AI connection...</p><div class="resource-actions"><button id="startAiService" class="text-button" type="button">Start Ollama</button><button id="pullAiModel" class="text-button" type="button">Download model</button><button id="refreshAiStatus" class="text-button" type="button">Refresh status</button><a class="text-link" href="https://ollama.com/download" target="_blank" rel="noopener noreferrer">Get Ollama &rarr;</a></div><code id="aiSetupCommand" class="setup-command" hidden></code></article>
+  <article class="surface-card resource-card"><span class="icon-disc purple">EXT</span><p class="eyebrow">OPTIONAL EXTERNAL CHECKS</p><h2>Manual resume and company research</h2><p>Jobscan and Resume Worded can provide a second opinion for a specific resume and role. Use Glassdoor manually to research a company; none of these scores are hiring or compensation outcomes.</p><div class="resource-actions"><a class="text-link" href="https://www.jobscan.co/resume-scanner" target="_blank" rel="noopener noreferrer">Jobscan &rarr;</a><a class="text-link" href="https://resumeworded.com/resume-scanner" target="_blank" rel="noopener noreferrer">Resume Worded &rarr;</a><a class="text-link" href="https://www.glassdoor.com/Reviews/index.htm" target="_blank" rel="noopener noreferrer">Glassdoor research &rarr;</a></div></article>
+</section>
+
+<section class="template-section" aria-labelledby="templateSuggestionsTitle">
+  <div class="section-header compact"><div><p class="eyebrow">RESUME TEMPLATE SUGGESTIONS</p><h2 id="templateSuggestionsTitle">Choose a layout for the right use case</h2></div><a class="text-link" href="/builder">Use a built-in ATS layout &rarr;</a></div>
+  <div class="template-grid">
+    <article class="template-card surface-card"><span class="template-preview classic-preview" aria-hidden="true"></span><h3>Classic ATS</h3><p>Centered name, conventional hierarchy, and the safest default for QA, SDET, and product-company applications.</p><a class="text-link" href="/builder">Choose in CareerCraft &rarr;</a></article>
+    <article class="template-card surface-card"><span class="template-preview compact-preview" aria-hidden="true"></span><h3>Compact QA</h3><p>Denser one-page layout for experience-heavy test engineers while keeping real text, headings, and bullets.</p><a class="text-link" href="/builder">Choose in CareerCraft &rarr;</a></article>
+    <article class="template-card surface-card"><span class="template-preview modern-preview" aria-hidden="true"></span><h3>Modern single-column</h3><p>Clean blue accent with left-aligned headings. Professional visual variation without columns, icons, or tables.</p><a class="text-link" href="/builder">Choose in CareerCraft &rarr;</a></article>
+    <article class="template-card surface-card"><span class="template-preview external-preview" aria-hidden="true"></span><h3>Free external inspiration</h3><p>Use Microsoft Word, Google Docs, or Canva only as inspiration or for human-reviewed design. Check parsing before using a visual template for ATS applications.</p><div class="resource-actions"><a class="text-link" href="https://create.microsoft.com/en-us/search?query=resume" target="_blank" rel="noopener noreferrer">Microsoft &rarr;</a><a class="text-link" href="https://support.google.com/docs/answer/148833" target="_blank" rel="noopener noreferrer">Google Docs &rarr;</a><a class="text-link" href="https://www.canva.com/create/resumes/" target="_blank" rel="noopener noreferrer">Canva &rarr;</a></div></article>
+  </div>
+</section>
+
+<section class="surface-card principles-card"><div><p class="eyebrow">THE STANDARD</p><h2>What this builder deliberately avoids</h2></div><ul><li>Invented skills, education, employers, certificates, or experience</li><li>Hidden text, keyword stuffing, columns, icons, and tables in the exported resume</li><li>LinkedIn scraping or applying without your explicit approval</li><li>Claiming a score predicts a company's hiring decision or a compensation package</li></ul></section>
+{% endblock %}

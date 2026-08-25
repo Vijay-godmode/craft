@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: careercraft
+    runtime: docker
+    plan: free
+    dockerfilePath: ./prototypes/python/Dockerfile
+    dockerContext: ./prototypes/python
+    healthCheckPath: /
+    envVars:
+      - key: RESUME_SECRET_KEY
+        generateValue: true
+      - key: RESUME_DB_PATH
+        value: /tmp/careercraft.db

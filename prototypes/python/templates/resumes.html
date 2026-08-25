@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Saved Resumes</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Saved Resumes</h1>
+    <a href="/">Back</a>
+    <table>
+      <thead><tr><th>ID</th><th>Filename</th><th>Saved At</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for r in resumes %}
+        <tr>
+          <td>{{ r[0] }}</td>
+          <td>{{ r[3] }}</td>
+          <td>{{ r[4] }}</td>
+          <td>
+            <form method="post" action="/delete_resume" onsubmit="return confirm('Delete resume?');">
+              <input type="hidden" name="id" value="{{ r[0] }}" />
+              <button type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+name,type,link,notes
+spaCy,python,https://spacy.io,NER and tokenization; useful for rule-based parsing
+SentenceTransformers,python,https://www.sbert.net,Embeddings for semantic matching
+keyBERT,python,https://github.com/MaartenGr/KeyBERT,Keyword extraction using embeddings
+rake-nltk,python,https://pypi.org/project/rake-nltk,Lightweight keyword extractor
+python-docx,python,https://python-docx.readthedocs.io,DOCX read/write
+pdfplumber,python,https://github.com/jsvine/pdfplumber,PDF text extraction
+pdfminer.six,python,https://github.com/pdfminer/pdfminer.six,Alternative PDF extractor
+pdf-parse,node,https://www.npmjs.com/package/pdf-parse,Node PDF parsing
+textract,node,https://www.npmjs.com/package/textract,Generic text extraction from many formats
+natural,node,https://www.npmjs.com/package/natural,NLP tools for Node.js
+sentence-transformers,model,https://www.sbert.net,Pretrained embedding models

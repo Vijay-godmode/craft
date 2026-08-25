@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a43">
+  <title>{% block title %}CareerCraft{% endblock %}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body data-page="{{ page }}">
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand-lockup" href="/" aria-label="CareerCraft home">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <span>Career<span>Craft</span></span>
+      </a>
+
+      <nav class="primary-nav">
+        <a href="/" class="nav-item {% if page == 'dashboard' %}active{% endif %}"><span aria-hidden="true">◫</span>Overview</a>
+        <a href="/profile" class="nav-item {% if page == 'profile' %}active{% endif %}"><span aria-hidden="true">◎</span>Master profile</a>
+        <a href="/builder" class="nav-item {% if page == 'builder' %}active{% endif %}"><span aria-hidden="true">✦</span>Tailor resume</a>
+        <a href="/jobs" class="nav-item {% if page == 'jobs' %}active{% endif %}"><span aria-hidden="true">⌁</span>Jobs inbox</a>
+        <a href="/applications" class="nav-item {% if page == 'applications' %}active{% endif %}"><span aria-hidden="true">✓</span>Applications</a>
+        <a href="/assistant" class="nav-item {% if page == 'assistant' %}active{% endif %}"><span aria-hidden="true">AI</span>Local AI</a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <a href="/resources" class="nav-item {% if page == 'resources' %}active{% endif %}"><span aria-hidden="true">?</span>Guides &amp; checks</a>
+        <p class="local-note"><span class="status-dot" aria-hidden="true"></span> Local-first workspace</p>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CAREER WORKSPACE</p>
+          <p class="topbar-copy">Build truth-first, job-specific resumes.</p>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button" id="enableNotifications" type="button" title="Enable browser job notifications" aria-label="Enable browser notifications">♧</button>
+          <a class="button button-dark button-small" href="/builder">Create resume <span aria-hidden="true">→</span></a>
+        </div>
+      </header>
+
+      <div class="page-content">
+        {% block content %}{% endblock %}
+      </div>
+      <footer class="app-footer">Crafted by Vijay Yadav</footer>
+    </main>
+  </div>
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

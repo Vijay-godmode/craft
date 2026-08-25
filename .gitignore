@@ -1,0 +1,11 @@
+.tmp-ollama/
+.DS_Store
+
+# CareerCraft local data and secrets
+prototypes/python/data.db
+prototypes/python/*.db
+prototypes/python/*.sqlite*
+prototypes/python/.env
+prototypes/python/.venv/
+prototypes/python/__pycache__/
+prototypes/python/.visual-test/
