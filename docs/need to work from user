@@ -1,0 +1,166 @@
+CareerCraft — build and testing playground roadmap
+=================================================
+
+Purpose
+-------
+
+CareerCraft remains a truthful, ATS-safe QA/Test Engineer resume builder and
+job-tracking workspace. The same product is also becoming a safe learning lab
+where you can practise testing a real Flask, JavaScript, SQLite application.
+Every page below must either save data, expose a documented test surface, or
+teach a test technique against a working feature. We will not add fake pages
+just to increase page count.
+
+Current pass — being implemented now
+------------------------------------
+
+- [x] Map the existing single-user Flask/SQLite application.
+- [x] Install Flask-Login in `prototypes/python/.venv`.
+- [ ] Add account registration, sign-in, sign-out, password hashing, sessions,
+      CSRF protection, account lockout, and user-scoped records.
+- [ ] Preserve existing local profile, jobs, applications, and resume versions
+      by assigning them to the first account created on this device.
+- [x] Fix job refresh visibility: a search must show an immediate Latest search
+      results tray, not just a provider count and a filtered approval queue.
+- [ ] Add a protected QA Lab with a safe internal practice API, data fixtures,
+      test cases, and saved test runs.
+- [ ] Add tests for authentication, data ownership, CSRF, public-feed result
+      rendering, resume export, and QA Lab APIs.
+- [ ] Relaunch locally and verify the end-to-end workflow.
+
+Product map — 17 meaningful routes
+----------------------------------
+
+1. `/sign-up` — create an account; weak passwords and duplicate e-mail are
+   rejected.
+2. `/sign-in` — signed session with a short, clear lockout after repeated
+   failed attempts.
+3. `/` — personal dashboard: profile readiness, job queue, application and
+   resume metrics.
+4. `/profile` — permanent, factual master profile; import/export included.
+5. `/builder` — analyse a job description and export an ATS-safe Word resume.
+6. `/resumes` — resume-version library and repeat download.
+7. `/jobs` — source-attributed QA/SDET discovery, latest-search results,
+   filters, approve/reject, and manual/import flow.
+8. `/applications` — manual, walk-in, referral, recruiter, and online
+   application tracker.
+9. `/resources` — templates, ATS checks, free manual research links, and local
+   Ollama status.
+10. `/assistant` — local resume assistant; it never applies to jobs or changes
+    code without confirmation.
+11. `/account` — identity, password change, active session details, and data
+    export/delete controls.
+12. `/lab` — QA Lab overview, progress, learning tracks, and recent runs.
+13. `/lab/api` — a documented Catalog and Orders practice API with valid and
+    invalid request examples.
+14. `/lab/ui` — accessible UI components and repeatable manual/UI automation
+    test scenarios.
+15. `/lab/data` — seeded relational test data, validation rules, and database
+    test cases.
+16. `/lab/runs` — create, pass/fail/block, and retain QA test-run evidence.
+17. `/lab/learn/<topic>` — focused testing guides and checklists for the
+    topics below.
+
+Testing learning path — use the app as the system under test
+-------------------------------------------------------------
+
+1. Smoke testing
+   - Verify sign-in, dashboard load, profile save, job creation, and DOCX
+     export after every deployment.
+   - Automate a five-step happy path first.
+
+2. Sanity and regression testing
+   - After changing the job inbox, check only affected filters as sanity.
+   - Before release, run full resume/profile/jobs/applications/Lab regression.
+
+3. Functional and integration testing
+   - Test profile -> job analysis -> tailored Word document -> resume library.
+   - Test job approval -> application tracker -> close/reopen status changes.
+   - Test a second account cannot read or update the first account's records.
+
+4. API testing
+   - Use the internal `/api/lab/catalog` and `/api/lab/orders` endpoints.
+   - Cover authentication, status codes, schema, bad JSON, missing fields,
+     idempotency, pagination, ownership, and error messages.
+   - Import the OpenAPI document into Postman, Bruno, Insomnia, or Hoppscotch.
+
+5. Database and data testing
+   - Seed deterministic data; validate primary keys, foreign keys, uniqueness,
+     user ownership, timestamps, migration safety, and rollback behaviour.
+   - Compare visible counts with API and SQLite results.
+
+6. UI/UX and compatibility testing
+   - Test keyboard-only use, focus order, labels, validation, empty/error/load
+     states, responsive sizes, current Chrome/Edge/Firefox, and narrow screens.
+   - Use stable `data-testid` attributes for future Playwright tests.
+
+7. Accessibility testing
+   - Check headings, landmarks, form labels, contrast, semantic buttons,
+     live regions, tab order, and reduced-motion preference.
+   - Run axe/Playwright in a future automation branch.
+
+8. Performance and resilience testing
+   - Measure dashboard/API response time using small seeded data first.
+   - Test provider timeout, cached job results, unavailable Ollama, and slow
+     network state. Do not run uncontrolled load tests against public job sites.
+
+9. Security testing
+   - Verify passwords are never stored/read as plain text.
+   - Test login lockout, CSRF rejection, session logout, authorization checks,
+     input validation, upload limits, URL validation, and security headers.
+   - Keep API keys and `.env` out of source control.
+
+10. Environment, CI/CD, and release testing
+    - Local: SQLite and optional local Ollama.
+    - Test: temporary SQLite database plus deterministic job-provider fixtures.
+    - Hosted: PostgreSQL/DATABASE_URL, HTTPS, a stable secret, trusted proxy
+      settings, backups, monitoring, and hosted-only feature flags.
+    - CI: syntax check, unit/integration tests, API contract tests, and browser
+      E2E smoke test on every pull request.
+
+Implementation rules
+--------------------
+
+- Resume facts stay truth-first. Tailoring reorders factual evidence; it never
+  invents skills, employers, certificates, or metrics.
+- LinkedIn and Google are handoff/import sources only. Do not scrape them,
+  auto-apply, or expose account credentials.
+- Public job results are source-attributed and must retain the original URL.
+- The local Ollama model is optional and local. A free hosted deployment cannot
+  use a laptop's Ollama instance.
+- SQLite is the fast local/test database. A hosted deployment needs a durable
+  managed PostgreSQL database, not `/tmp` storage.
+- New functionality must ship with at least one deterministic test and a UI
+  empty/error/loading state.
+
+Suggested development order for you
+-----------------------------------
+
+1. Run the app and create an account. Confirm a second browser/private window
+   cannot view the first account's profile or jobs.
+2. Add profile facts and import/export a JSON backup.
+3. Add a job manually, approve it, create a DOCX, and move it through the
+   application pipeline.
+4. Refresh the public feed. Inspect Latest search results and compare its
+   status cards with the New/Approved/Closed queue filters.
+5. Open QA Lab API. Send valid, invalid, unauthenticated, and cross-account
+   requests with Postman/Bruno/Hoppscotch.
+6. Write manual cases in QA Lab, save a run, then automate the smoke path with
+   Playwright.
+7. Add one new field to the practice Orders API, migrate it, update contract
+   tests, and run regression.
+8. Before deployment, configure HTTPS, a strong `RESUME_SECRET_KEY`, a durable
+   database, backups, and secrets outside the repository.
+
+Useful local commands
+---------------------
+
+```powershell
+cd "D:\Resume builder\prototypes\python"
+.\.venv\Scripts\Activate.ps1
+python -m unittest -v test_careercraft.py
+node --check static\app.js
+waitress-serve --host=127.0.0.1 --port=8000 app:app
+```
+
+Crafted by Vijay Yadav.
