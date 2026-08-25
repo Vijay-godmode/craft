@@ -63,6 +63,19 @@ python -m unittest -v test_careercraft.py
 node --check static\app.js
 ```
 
+## QA data factory
+
+Create bounded, tagged local records for practice and remove only that run:
+
+```powershell
+python test_data_factory.py seed:test --database qa-factory.db --run-id demo
+python test_data_factory.py seed:large --database qa-factory.db --run-id large-demo
+python test_data_factory.py seed:cleanup --database qa-factory.db --run-id demo
+```
+
+See [`docs/PHASE_STATUS.md`](../../docs/PHASE_STATUS.md) for the 35-phase
+definition of done and current implementation status.
+
 ## Deployment note
 
 Authentication, user isolation, CSRF checks, and conservative security headers are included. For a public deployment, still use HTTPS, a durable managed PostgreSQL database, a stable `RESUME_SECRET_KEY`, backups, monitoring, application-level rate limiting, a secure secret manager, and an e-mail provider before adding password reset. Do not publish the SQLite file, `.env`, or resume exports.

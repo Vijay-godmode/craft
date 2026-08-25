@@ -1368,6 +1368,16 @@
     });
   }
 
+  function initMarketplace() {
+    const container = $('#marketplaceJobs');
+    api('/api/marketplace/jobs').then((data) => { clear(container); if (!data.jobs.length) container.append(emptyState('No internal postings', 'Ask an administrator or recruiter to create a safe practice posting.')); data.jobs.forEach((job) => { const card=node('article',{className:'job-card'},[node('h3',{text:job.title}),node('p',{className:'job-meta',text:[job.company_name,job.location,job.employment_type].filter(Boolean).join(' / ')}),node('p',{className:'job-insight',text:(job.description||'').slice(0,300)})]); const apply=node('button',{className:'button button-primary button-small',type:'button',text:'Apply in QA workflow'}); apply.addEventListener('click',async()=>{try{const r=await api(`/api/marketplace/jobs/${job.id}/apply`,{method:'POST',body:{cover_note:'QA marketplace practice application.'}}); toast(r.message); apply.disabled=true; apply.textContent='Applied';}catch(e){toast(e.message,'error');}}); card.append(apply);container.append(card); }); }).catch((error)=>{clear(container);container.append(emptyState('Marketplace unavailable',error.message));});
+  }
+  function initRecruiter() {
+    const company=$('#companyForm'); const posting=$('#recruiterJobForm');
+    if(company) company.addEventListener('submit',async(e)=>{e.preventDefault();try{const r=await api('/api/recruiter/companies',{method:'POST',body:{name:$('#companyName').value,location:$('#companyLocation').value,website:$('#companyWebsite').value}}); toast(`Company created. Use company ID ${r.id} for a posting.`);$('#recruiterCompanyId').value=r.id;company.reset();}catch(x){toast(x.message,'error');}});
+    if(posting) posting.addEventListener('submit',async(e)=>{e.preventDefault();try{const r=await api('/api/recruiter/jobs',{method:'POST',body:{company_id:$('#recruiterCompanyId').value,title:$('#recruiterJobTitle').value,location:$('#recruiterJobLocation').value,employment_type:$('#recruiterJobType').value,description:$('#recruiterJobDescription').value,required_skills:splitLines($('#recruiterJobSkills').value)}});toast(r.message);posting.reset();}catch(x){toast(x.message,'error');}});
+  }
+
   function initNotifications() {
     const globalButton = $('#enableNotifications');
     if (globalButton) globalButton.addEventListener('click', notificationPermission);
@@ -1390,5 +1400,7 @@
     if (page === 'lab') initLabOverview();
     if (page === 'lab-api') initLabApi();
     if (page === 'lab-runs') initLabRuns();
+    if (page === 'marketplace') initMarketplace();
+    if (page === 'recruiter') initRecruiter();
   });
 }());

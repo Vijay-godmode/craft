@@ -103,6 +103,38 @@ def current_owner_id() -> int:
     return int(current_user.get_id())
 
 
+def has_role(app: Flask, *roles: str) -> bool:
+    if not current_user.is_authenticated:
+        return False
+    with closing(get_db(app)) as conn:
+        row = conn.execute(
+            """
+            SELECT 1 FROM user_roles ur JOIN roles r ON r.id = ur.role_id
+            WHERE ur.user_id = ? AND r.code IN ({}) LIMIT 1
+            """.format(",".join("?" for _ in roles)),
+            (current_owner_id(), *roles),
+        ).fetchone()
+    return bool(row)
+
+
+def require_role(app: Flask, *roles: str) -> None:
+    if not has_role(app, *roles):
+        abort(403, description="This action requires the " + "/".join(roles) + " role.")
+
+
+def audit(app: Flask, action: str, entity_type: str, entity_id: Any = "", detail: dict[str, Any] | None = None, subject_user_id: int | None = None) -> None:
+    """Persist security-relevant business actions without secrets or passwords."""
+    with closing(get_db(app)) as conn:
+        conn.execute(
+            """
+            INSERT INTO audit_logs (actor_id, subject_user_id, action, entity_type, entity_id, detail_json, request_id, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (current_owner_id() if current_user.is_authenticated else None, subject_user_id, action, entity_type, str(entity_id)[:100], json.dumps(detail or {}, ensure_ascii=False), request.environ.get("REQUEST_ID", ""), utc_now()),
+        )
+        conn.commit()
+
+
 def csrf_token() -> str:
     """Create one per-session CSRF secret for forms and JSON mutations."""
 
@@ -373,6 +405,149 @@ def init_db(app: Flask) -> None:
                 updated_at TEXT NOT NULL
             );
 
+            CREATE TABLE IF NOT EXISTS roles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL UNIQUE,
+                label TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS permissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL UNIQUE,
+                description TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS role_permissions (
+                role_id INTEGER NOT NULL,
+                permission_id INTEGER NOT NULL,
+                PRIMARY KEY(role_id, permission_id),
+                FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE,
+                FOREIGN KEY(permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS user_roles (
+                user_id INTEGER NOT NULL,
+                role_id INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                PRIMARY KEY(user_id, role_id),
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(role_id) REFERENCES roles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS companies (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                website TEXT NOT NULL DEFAULT '',
+                location TEXT NOT NULL DEFAULT '',
+                description TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(owner_id, name),
+                FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS company_jobs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                company_id INTEGER NOT NULL,
+                created_by INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                location TEXT NOT NULL DEFAULT '',
+                employment_type TEXT NOT NULL DEFAULT 'Full-time',
+                description TEXT NOT NULL,
+                required_skills TEXT NOT NULL DEFAULT '[]',
+                status TEXT NOT NULL DEFAULT 'open',
+                closes_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE,
+                FOREIGN KEY(created_by) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS posting_applications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                posting_id INTEGER NOT NULL,
+                candidate_id INTEGER NOT NULL,
+                workspace_job_id INTEGER,
+                status TEXT NOT NULL DEFAULT 'submitted',
+                cover_note TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(posting_id, candidate_id),
+                FOREIGN KEY(posting_id) REFERENCES company_jobs(id) ON DELETE CASCADE,
+                FOREIGN KEY(candidate_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(workspace_job_id) REFERENCES jobs(id) ON DELETE SET NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS interviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                application_id INTEGER NOT NULL,
+                owner_id INTEGER NOT NULL,
+                interviewer_id INTEGER,
+                scheduled_at TEXT NOT NULL,
+                duration_minutes INTEGER NOT NULL CHECK(duration_minutes BETWEEN 15 AND 240),
+                mode TEXT NOT NULL DEFAULT 'Video',
+                meeting_url TEXT NOT NULL DEFAULT '',
+                status TEXT NOT NULL DEFAULT 'scheduled',
+                notes TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(application_id) REFERENCES applications(id) ON DELETE CASCADE,
+                FOREIGN KEY(owner_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY(interviewer_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS interview_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                interview_id INTEGER NOT NULL,
+                author_id INTEGER NOT NULL,
+                recommendation TEXT NOT NULL CHECK(recommendation IN ('strong_yes', 'yes', 'neutral', 'no', 'strong_no')),
+                rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+                feedback TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(interview_id, author_id),
+                FOREIGN KEY(interview_id) REFERENCES interviews(id) ON DELETE CASCADE,
+                FOREIGN KEY(author_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                kind TEXT NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                link TEXT NOT NULL DEFAULT '',
+                read_at TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                actor_id INTEGER,
+                subject_user_id INTEGER,
+                action TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT NOT NULL DEFAULT '',
+                detail_json TEXT NOT NULL DEFAULT '{}',
+                request_id TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(actor_id) REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY(subject_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS feature_flags (
+                key TEXT PRIMARY KEY,
+                enabled INTEGER NOT NULL DEFAULT 0,
+                admin_only INTEGER NOT NULL DEFAULT 1,
+                updated_by INTEGER,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(updated_by) REFERENCES users(id) ON DELETE SET NULL
+            );
+
             CREATE TABLE IF NOT EXISTS user_profiles (
                 user_id INTEGER PRIMARY KEY,
                 data TEXT NOT NULL,
@@ -470,6 +645,13 @@ def init_db(app: Flask) -> None:
             CREATE INDEX IF NOT EXISTS idx_lab_catalog_owner ON lab_catalog_items(user_id, category);
             CREATE INDEX IF NOT EXISTS idx_lab_orders_owner ON lab_orders(user_id, created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_qa_runs_owner ON qa_runs(user_id, created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_user_roles_role ON user_roles(role_id, user_id);
+            CREATE INDEX IF NOT EXISTS idx_companies_owner ON companies(owner_id, status);
+            CREATE INDEX IF NOT EXISTS idx_company_jobs_status ON company_jobs(status, created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_posting_apps_posting ON posting_applications(posting_id, status);
+            CREATE INDEX IF NOT EXISTS idx_interviews_owner_schedule ON interviews(owner_id, scheduled_at);
+            CREATE INDEX IF NOT EXISTS idx_notifications_owner ON notifications(user_id, read_at, created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id, created_at DESC);
             """
         )
         # SQLite has no ADD COLUMN IF NOT EXISTS. Keep existing local workspaces
@@ -519,6 +701,29 @@ def init_db(app: Flask) -> None:
         conn.execute("CREATE INDEX IF NOT EXISTS idx_applications_owner ON applications(user_id, updated_at DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_versions_owner ON resume_versions(user_id, created_at DESC)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_job_searches_updated ON job_searches(updated_at DESC)")
+        now = utc_now()
+        conn.executemany(
+            "INSERT OR IGNORE INTO roles (code, label, created_at) VALUES (?, ?, ?)",
+            [("candidate", "Candidate", now), ("recruiter", "Recruiter", now), ("hiring_manager", "Hiring Manager", now), ("admin", "Administrator", now)],
+        )
+        conn.executemany(
+            "INSERT OR IGNORE INTO permissions (code, description, created_at) VALUES (?, ?, ?)",
+            [
+                ("candidate.self", "Manage own candidate workspace", now),
+                ("jobs.manage", "Create and manage company jobs", now),
+                ("applications.manage", "Manage candidate applications", now),
+                ("interviews.manage", "Schedule interviews", now),
+                ("admin.manage", "Manage QA controls and roles", now),
+            ],
+        )
+        for user in conn.execute("SELECT id, role, created_at FROM users").fetchall():
+            code = str(user["role"] or "candidate")
+            if code == "user":
+                code = "candidate"
+                conn.execute("UPDATE users SET role = ? WHERE id = ?", (code, user["id"]))
+            role = conn.execute("SELECT id FROM roles WHERE code = ?", (code,)).fetchone()
+            if role:
+                conn.execute("INSERT OR IGNORE INTO user_roles (user_id, role_id, created_at) VALUES (?, ?, ?)", (user["id"], role["id"], user["created_at"]))
         conn.commit()
 
 
@@ -986,11 +1191,16 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
                     password=data.get("password"),
                     display_name=data.get("display_name"),
                     created_at=now,
-                    role="admin" if is_first_account else "user",
+                    role="admin" if is_first_account else "candidate",
                 )
             except AccountValidationError as exc:
                 return jsonify({"error": str(exc)}), 400
             conn.commit()
+        with closing(get_db(app)) as conn:
+            role = conn.execute("SELECT id FROM roles WHERE code = ?", (user.role,)).fetchone()
+            if role:
+                conn.execute("INSERT OR IGNORE INTO user_roles (user_id, role_id, created_at) VALUES (?, ?, ?)", (user.id, role["id"], now))
+                conn.commit()
         if is_first_account:
             claim_legacy_workspace(app, user.id)
         session.clear()
@@ -1027,6 +1237,203 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     @app.get("/account")
     def account_page() -> str:
         return render_template("account.html", page="account")
+
+    @app.get("/marketplace")
+    def marketplace_page() -> str:
+        return render_template("marketplace.html", page="marketplace")
+
+    @app.get("/recruiter")
+    def recruiter_page() -> Any:
+        require_role(app, "recruiter", "hiring_manager", "admin")
+        return render_template("recruiter.html", page="recruiter")
+
+    @app.get("/api/marketplace/jobs")
+    def marketplace_jobs() -> Any:
+        with closing(get_db(app)) as conn:
+            rows = conn.execute("""SELECT cj.*, c.name AS company_name FROM company_jobs cj JOIN companies c ON c.id=cj.company_id WHERE cj.status='open' ORDER BY cj.created_at DESC LIMIT 100""").fetchall()
+        return jsonify({"jobs": [{**{key: row[key] for key in row.keys()}, "required_skills": json_value(row["required_skills"], [])} for row in rows]})
+
+    @app.post("/api/recruiter/companies")
+    def create_company() -> Any:
+        require_role(app, "recruiter", "hiring_manager", "admin")
+        data, user_id, now = request_json_object(), current_owner_id(), utc_now()
+        name = plain_text(data.get("name"), 180)
+        if len(name) < 2:
+            return jsonify({"error": "Company name must contain at least two characters."}), 400
+        with closing(get_db(app)) as conn:
+            cursor = conn.execute("INSERT INTO companies (owner_id,name,website,location,description,created_at,updated_at) VALUES (?,?,?,?,?,?,?)", (user_id,name,clean_url(data.get("website")),plain_text(data.get("location"),180),plain_text(data.get("description"),2000),now,now))
+            conn.commit()
+        audit(app, "company.created", "company", cursor.lastrowid, {"name": name})
+        return jsonify({"id": cursor.lastrowid, "message": "Company created."}), 201
+
+    @app.post("/api/recruiter/jobs")
+    def create_company_job() -> Any:
+        require_role(app, "recruiter", "hiring_manager", "admin")
+        data, user_id, now = request_json_object(), current_owner_id(), utc_now()
+        title, description = plain_text(data.get("title"),180), plain_text(data.get("description"),30000)
+        try: company_id = int(data.get("company_id"))
+        except (TypeError, ValueError): return jsonify({"error": "Choose a company."}), 400
+        if not title or len(description) < 30: return jsonify({"error": "Add a title and at least 30 characters of job description."}), 400
+        with closing(get_db(app)) as conn:
+            company = conn.execute("SELECT id FROM companies WHERE id=? AND owner_id=?", (company_id,user_id)).fetchone()
+            if not company: return jsonify({"error": "Company not found."}), 404
+            cursor = conn.execute("INSERT INTO company_jobs (company_id,created_by,title,location,employment_type,description,required_skills,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)", (company_id,user_id,title,plain_text(data.get("location"),180),plain_text(data.get("employment_type"),80) or "Full-time",description,json.dumps(list_of_strings(data.get("required_skills"),40)),now,now))
+            conn.commit()
+        audit(app, "company_job.created", "company_job", cursor.lastrowid, {"title": title})
+        return jsonify({"id": cursor.lastrowid, "message": "Job posting opened."}), 201
+
+    @app.get("/api/recruiter/jobs")
+    def recruiter_jobs() -> Any:
+        require_role(app, "recruiter", "hiring_manager", "admin")
+        user_id = current_owner_id()
+        with closing(get_db(app)) as conn:
+            rows = conn.execute(
+                """SELECT cj.*, c.name AS company_name FROM company_jobs cj JOIN companies c ON c.id = cj.company_id
+                   WHERE cj.created_by = ? ORDER BY cj.updated_at DESC, cj.id DESC""", (user_id,)
+            ).fetchall()
+        return jsonify({"jobs": [{**{key: row[key] for key in row.keys()}, "required_skills": json_value(row["required_skills"], [])} for row in rows]})
+
+    @app.patch("/api/recruiter/jobs/<int:posting_id>")
+    def update_company_job(posting_id: int) -> Any:
+        require_role(app, "recruiter", "hiring_manager", "admin")
+        data, user_id, now = request_json_object(), current_owner_id(), utc_now()
+        with closing(get_db(app)) as conn:
+            posting = conn.execute("SELECT * FROM company_jobs WHERE id = ? AND created_by = ?", (posting_id, user_id)).fetchone()
+            if not posting:
+                return jsonify({"error": "Job posting not found."}), 404
+            title = plain_text(data.get("title"), 180) if "title" in data else posting["title"]
+            description = plain_text(data.get("description"), 30000) if "description" in data else posting["description"]
+            status = plain_text(data.get("status"), 30).casefold() if "status" in data else posting["status"]
+            if not title or len(description) < 30 or status not in {"open", "closed", "paused"}:
+                return jsonify({"error": "Use a valid title, description, and open/paused/closed status."}), 400
+            conn.execute(
+                """UPDATE company_jobs SET title = ?, location = ?, employment_type = ?, description = ?, required_skills = ?, status = ?, closes_at = ?, updated_at = ? WHERE id = ? AND created_by = ?""",
+                (title, plain_text(data.get("location"), 180) if "location" in data else posting["location"], plain_text(data.get("employment_type"), 80) if "employment_type" in data else posting["employment_type"], description, json.dumps(list_of_strings(data.get("required_skills"), 40) if "required_skills" in data else json_value(posting["required_skills"], [])), status, now if status == "closed" else posting["closes_at"], now, posting_id, user_id),
+            )
+            conn.commit()
+        audit(app, "company_job.updated", "company_job", posting_id, {"status": status})
+        return jsonify({"message": "Job posting updated."})
+
+    @app.get("/api/recruiter/jobs/<int:posting_id>/applications")
+    def recruiter_job_applications(posting_id: int) -> Any:
+        require_role(app, "recruiter", "hiring_manager", "admin")
+        user_id = current_owner_id()
+        with closing(get_db(app)) as conn:
+            rows = conn.execute(
+                """SELECT pa.*, cj.title, u.email AS candidate_email, u.display_name AS candidate_name
+                   FROM posting_applications pa JOIN company_jobs cj ON cj.id = pa.posting_id JOIN users u ON u.id = pa.candidate_id
+                   WHERE pa.posting_id = ? AND cj.created_by = ? ORDER BY pa.created_at DESC""", (posting_id, user_id)
+            ).fetchall()
+        if not rows:
+            with closing(get_db(app)) as conn:
+                exists = conn.execute("SELECT 1 FROM company_jobs WHERE id = ? AND created_by = ?", (posting_id, user_id)).fetchone()
+            if not exists:
+                return jsonify({"error": "Job posting not found."}), 404
+        return jsonify({"applications": [{key: row[key] for key in row.keys()} for row in rows]})
+
+    @app.patch("/api/recruiter/applications/<int:application_id>")
+    def recruiter_update_application(application_id: int) -> Any:
+        require_role(app, "recruiter", "hiring_manager", "admin")
+        data, user_id, now = request_json_object(), current_owner_id(), utc_now()
+        status = plain_text(data.get("status"), 40).casefold()
+        if status not in {"submitted", "screening", "interview", "rejected", "hired"}:
+            return jsonify({"error": "Choose submitted, screening, interview, rejected, or hired."}), 400
+        with closing(get_db(app)) as conn:
+            row = conn.execute("""SELECT pa.* FROM posting_applications pa JOIN company_jobs cj ON cj.id = pa.posting_id
+                                  WHERE pa.id = ? AND cj.created_by = ?""", (application_id, user_id)).fetchone()
+            if not row:
+                return jsonify({"error": "Candidate application not found."}), 404
+            conn.execute("UPDATE posting_applications SET status = ?, updated_at = ? WHERE id = ?", (status, now, application_id))
+            conn.execute("INSERT INTO notifications (user_id, kind, title, body, link, created_at) VALUES (?, 'application_status', ?, ?, '/applications', ?)", (row["candidate_id"], "Application status updated", f"Your marketplace application is now {status}.", now))
+            conn.commit()
+        audit(app, "posting_application.updated", "posting_application", application_id, {"status": status}, row["candidate_id"])
+        return jsonify({"message": "Candidate application updated."})
+
+    @app.get("/api/notifications")
+    def list_notifications() -> Any:
+        user_id = current_owner_id()
+        with closing(get_db(app)) as conn:
+            rows = conn.execute("SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC, id DESC LIMIT 100", (user_id,)).fetchall()
+        return jsonify({"notifications": [{key: row[key] for key in row.keys()} for row in rows]})
+
+    @app.post("/api/notifications/<int:notification_id>/read")
+    def mark_notification_read(notification_id: int) -> Any:
+        user_id = current_owner_id()
+        with closing(get_db(app)) as conn:
+            conn.execute("UPDATE notifications SET read_at = ? WHERE id = ? AND user_id = ?", (utc_now(), notification_id, user_id))
+            conn.commit()
+        return jsonify({"message": "Notification marked as read."})
+
+    @app.get("/api/interviews")
+    def list_interviews() -> Any:
+        user_id = current_owner_id()
+        with closing(get_db(app)) as conn:
+            rows = conn.execute(
+                """SELECT i.*, j.title, j.company FROM interviews i JOIN applications a ON a.id = i.application_id
+                   JOIN jobs j ON j.id = a.job_id WHERE i.owner_id = ? AND a.user_id = ?
+                   ORDER BY i.scheduled_at ASC, i.id ASC""", (user_id, user_id)
+            ).fetchall()
+        return jsonify({"interviews": [{key: row[key] for key in row.keys()} for row in rows]})
+
+    @app.post("/api/interviews")
+    def create_interview() -> Any:
+        data, user_id, now = request_json_object(), current_owner_id(), utc_now()
+        try:
+            application_id = int(data.get("application_id"))
+            duration = int(data.get("duration_minutes", 30))
+        except (TypeError, ValueError):
+            return jsonify({"error": "Choose an application and a valid duration."}), 400
+        scheduled_at = plain_text(data.get("scheduled_at"), 80)
+        if not scheduled_at or not 15 <= duration <= 240:
+            return jsonify({"error": "Add a scheduled time and a duration between 15 and 240 minutes."}), 400
+        with closing(get_db(app)) as conn:
+            application = conn.execute("SELECT id, job_id FROM applications WHERE id = ? AND user_id = ?", (application_id, user_id)).fetchone()
+            if not application:
+                return jsonify({"error": "Application not found."}), 404
+            cursor = conn.execute(
+                """INSERT INTO interviews (application_id, owner_id, scheduled_at, duration_minutes, mode, meeting_url, notes, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (application_id, user_id, scheduled_at, duration, plain_text(data.get("mode"), 40) or "Video", clean_url(data.get("meeting_url")), plain_text(data.get("notes"), 2000), now, now),
+            )
+            conn.execute("INSERT INTO notifications (user_id, kind, title, body, link, created_at) VALUES (?, 'interview_scheduled', 'Interview scheduled', ?, '/applications', ?)", (user_id, f"Interview scheduled for {scheduled_at}.", now))
+            conn.commit()
+        audit(app, "interview.created", "interview", cursor.lastrowid, {"application_id": application_id})
+        return jsonify({"id": cursor.lastrowid, "message": "Interview scheduled."}), 201
+
+    @app.patch("/api/interviews/<int:interview_id>")
+    def update_interview(interview_id: int) -> Any:
+        data, user_id, now = request_json_object(), current_owner_id(), utc_now()
+        with closing(get_db(app)) as conn:
+            interview = conn.execute("SELECT * FROM interviews WHERE id = ? AND owner_id = ?", (interview_id, user_id)).fetchone()
+            if not interview:
+                return jsonify({"error": "Interview not found."}), 404
+            status = plain_text(data.get("status"), 30).casefold() if "status" in data else interview["status"]
+            if status not in {"scheduled", "completed", "cancelled", "rescheduled"}:
+                return jsonify({"error": "Choose scheduled, completed, cancelled, or rescheduled."}), 400
+            conn.execute("UPDATE interviews SET scheduled_at = ?, duration_minutes = ?, mode = ?, meeting_url = ?, status = ?, notes = ?, updated_at = ? WHERE id = ? AND owner_id = ?", (plain_text(data.get("scheduled_at"), 80) or interview["scheduled_at"], int(data.get("duration_minutes", interview["duration_minutes"])), plain_text(data.get("mode"), 40) or interview["mode"], clean_url(data.get("meeting_url")) if "meeting_url" in data else interview["meeting_url"], status, plain_text(data.get("notes"), 2000) if "notes" in data else interview["notes"], now, interview_id, user_id))
+            conn.commit()
+        audit(app, "interview.updated", "interview", interview_id, {"status": status})
+        return jsonify({"message": "Interview updated."})
+
+    @app.post("/api/marketplace/jobs/<int:posting_id>/apply")
+    def apply_marketplace_job(posting_id: int) -> Any:
+        user_id, data, now = current_owner_id(), request_json_object(), utc_now()
+        with closing(get_db(app)) as conn:
+            posting = conn.execute("""SELECT cj.*, c.name AS company_name FROM company_jobs cj JOIN companies c ON c.id=cj.company_id WHERE cj.id=? AND cj.status='open'""", (posting_id,)).fetchone()
+            if not posting: return jsonify({"error": "This job posting is not open."}), 404
+        try:
+            workspace_job, _ = create_job(app, {"external_id": f"marketplace:{posting_id}", "source": "CareerCraft Marketplace", "title": posting["title"], "company": posting["company_name"], "location": posting["location"], "job_type": posting["employment_type"], "description": posting["description"], "source_note": "Applied through the internal QA marketplace."})
+        except ValueError as exc: return jsonify({"error": str(exc)}), 400
+        with closing(get_db(app)) as conn:
+            try:
+                cursor=conn.execute("INSERT INTO posting_applications (posting_id,candidate_id,workspace_job_id,cover_note,created_at,updated_at) VALUES (?,?,?,?,?,?)", (posting_id,user_id,workspace_job["id"],plain_text(data.get("cover_note"),2000),now,now))
+            except sqlite3.IntegrityError:
+                return jsonify({"error": "You have already applied to this posting."}), 409
+            conn.execute("UPDATE jobs SET status='applied', updated_at=? WHERE id=? AND user_id=?", (now,workspace_job["id"],user_id))
+            conn.execute("INSERT INTO applications (user_id,job_id,status,notes,application_kind,created_at,updated_at) VALUES (?,?, 'applied', ?, 'Marketplace application', ?, ?)", (user_id,workspace_job["id"],plain_text(data.get("cover_note"),2000),now,now))
+            conn.commit()
+        audit(app, "marketplace.applied", "company_job", posting_id, {"application_id": cursor.lastrowid})
+        return jsonify({"id": cursor.lastrowid, "job": workspace_job, "message": "Application submitted and added to your private pipeline."}), 201
 
     @app.patch("/api/account")
     def update_account() -> Any:

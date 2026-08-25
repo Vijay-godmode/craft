@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from io import BytesIO
+from contextlib import closing
 from pathlib import Path
 import tempfile
 import unittest
 import json
+import sqlite3
 from unittest.mock import patch
 
 from docx import Document
@@ -15,6 +17,7 @@ from app import create_app
 from ats_engine import extract_requirements
 from job_discovery import classify_qa_role, discover_qa_jobs, matches_market
 from workspace_assistant import _resume_chat_reply
+from test_data_factory import cleanup_dataset, create_dataset
 
 
 SAMPLE_PROFILE = {
@@ -371,6 +374,55 @@ class CareerCraftTests(unittest.TestCase):
         self.assertEqual(repeated.json["order"]["id"], created.json["order"]["id"])
         invalid = self.client.post("/api/lab/orders", json={"customer_name": "QA", "idempotency_key": "exercise-order-002", "items": [{"product_id": product_id, "quantity": 0}]})
         self.assertEqual(invalid.status_code, 400)
+
+    def test_tagged_test_data_factory_seeds_and_cleans_related_records(self) -> None:
+        database = str(Path(self.temp_dir.name) / "factory.db")
+        result = create_dataset(database, "deterministic", 2)
+        self.assertEqual(result["users"], 2)
+        with closing(sqlite3.connect(database)) as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM jobs WHERE source = 'Factory'").fetchone()[0], 2)
+        self.assertEqual(cleanup_dataset(database, "deterministic"), 2)
+        with closing(sqlite3.connect(database)) as connection:
+            self.assertEqual(connection.execute("SELECT COUNT(*) FROM users WHERE email LIKE 'qa-factory+deterministic-%'").fetchone()[0], 0)
+
+    def test_admin_recruiter_posting_and_candidate_marketplace_application(self) -> None:
+        company = self.client.post("/api/recruiter/companies", json={"name": "QA Product Labs", "location": "Pune"})
+        self.assertEqual(company.status_code, 201)
+        posting = self.client.post("/api/recruiter/jobs", json={"company_id": company.json["id"], "title": "QA Engineer", "description": JOB_DESCRIPTION, "required_skills": ["Selenium", "API Testing"]})
+        self.assertEqual(posting.status_code, 201)
+        recruiter_jobs = self.client.get("/api/recruiter/jobs")
+        self.assertEqual(recruiter_jobs.status_code, 200)
+        self.assertEqual(self.client.patch(f"/api/recruiter/jobs/{posting.json['id']}", json={"status": "paused"}).status_code, 200)
+        self.assertEqual(self.client.patch(f"/api/recruiter/jobs/{posting.json['id']}", json={"status": "open"}).status_code, 200)
+        self.client.post("/api/auth/logout", json={})
+        csrf = self.client.get("/api/csrf").json["csrf_token"]
+        candidate = self.client.post("/api/auth/register", json={"display_name": "Candidate", "email": "candidate@example.com", "password": "CandidatePassword123"}, headers={"X-CSRF-Token": csrf})
+        self.assertEqual(candidate.status_code, 201)
+        self.client.environ_base["HTTP_X_CSRF_TOKEN"] = candidate.json["csrf_token"]
+        self.assertEqual(self.client.post("/api/recruiter/companies", json={"name": "Blocked"}).status_code, 403)
+        jobs = self.client.get("/api/marketplace/jobs")
+        self.assertEqual(len(jobs.json["jobs"]), 1)
+        applied = self.client.post(f"/api/marketplace/jobs/{jobs.json['jobs'][0]['id']}/apply", json={"cover_note": "Testing the candidate flow."})
+        self.assertEqual(applied.status_code, 201)
+        self.assertEqual(self.client.post(f"/api/marketplace/jobs/{jobs.json['jobs'][0]['id']}/apply", json={}).status_code, 409)
+        self.client.post("/api/auth/logout", json={})
+        csrf = self.client.get("/api/csrf").json["csrf_token"]
+        admin = self.client.post("/api/auth/login", json={"email": "ava@example.com", "password": "TestPassword123"}, headers={"X-CSRF-Token": csrf})
+        self.assertEqual(admin.status_code, 200)
+        self.client.environ_base["HTTP_X_CSRF_TOKEN"] = admin.json["csrf_token"]
+        posting_apps = self.client.get(f"/api/recruiter/jobs/{posting.json['id']}/applications")
+        self.assertEqual(posting_apps.status_code, 200)
+        self.assertEqual(self.client.patch(f"/api/recruiter/applications/{posting_apps.json['applications'][0]['id']}", json={"status": "interview"}).status_code, 200)
+        self.client.post("/api/auth/logout", json={})
+        csrf = self.client.get("/api/csrf").json["csrf_token"]
+        candidate_login = self.client.post("/api/auth/login", json={"email": "candidate@example.com", "password": "CandidatePassword123"}, headers={"X-CSRF-Token": csrf})
+        self.assertEqual(candidate_login.status_code, 200)
+        self.client.environ_base["HTTP_X_CSRF_TOKEN"] = candidate_login.json["csrf_token"]
+        self.assertEqual(len(self.client.get("/api/notifications").json["notifications"]), 1)
+        application_id = self.client.get("/api/applications").json["applications"][0]["id"]
+        interview = self.client.post("/api/interviews", json={"application_id": application_id, "scheduled_at": "2026-09-01T10:00", "duration_minutes": 45, "meeting_url": "https://example.com/interview"})
+        self.assertEqual(interview.status_code, 201)
+        self.assertEqual(len(self.client.get("/api/interviews").json["interviews"]), 1)
 
 
 if __name__ == "__main__":

@@ -24,6 +24,7 @@
         <a href="/assistant" class="nav-item {% if page == 'assistant' %}active{% endif %}"><span aria-hidden="true">AI</span>Local AI</a>
         <a href="/resumes" class="nav-item {% if page == 'resumes' %}active{% endif %}"><span aria-hidden="true">R</span>Resume library</a>
         <a href="/lab" class="nav-item {% if page in ['lab', 'lab-api', 'lab-runs'] %}active{% endif %}"><span aria-hidden="true">Q</span>QA Lab</a>
+        {% if current_user.role in ['recruiter', 'hiring_manager', 'admin'] %}<a href="/recruiter" class="nav-item {% if page == 'recruiter' %}active{% endif %}"><span aria-hidden="true">H</span>Recruiter</a>{% endif %}
       </nav>
 
       <div class="sidebar-bottom">

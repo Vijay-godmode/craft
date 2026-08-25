@@ -1,0 +1,1229 @@
+CAREERCRAFT QA PLAYGROUND — MASTER IMPLEMENTATION PLAN
+=========================================================
+
+TARGET APPLICATION
+------------------
+Existing application:
+https://careercraft-lt99.onrender.com/
+
+Goal:
+Transform CareerCraft into a production-like, full-stack QA/SDET testing
+playground where a tester can practice UI, API, database, integration,
+functional, accessibility, visual, security, performance, load, stress,
+spike, soak, resilience, concurrency, observability and CI/CD testing.
+
+IMPORTANT:
+- First inspect the existing application and codebase.
+- Do NOT rewrite the application blindly.
+- Preserve all existing functionality.
+- Reuse the existing stack where practical.
+- Implement this plan incrementally.
+- After every phase, run relevant tests and verify the application.
+- Keep intentionally broken/vulnerable/fault-injection functionality isolated
+  from the normal application and disabled in production.
+- Never commit secrets or expose database credentials to the frontend.
+- Never run destructive stress/load tests against production.
+
+
+=========================================================
+PHASE 0 — DISCOVERY AND BASELINE
+=========================================================
+
+Before changing code:
+
+1. Inspect the complete repository.
+2. Identify:
+   - frontend framework
+   - backend framework
+   - database/storage
+   - authentication
+   - API routes
+   - deployment configuration
+   - environment variables
+   - current test framework
+   - existing pages/components
+3. Inspect the deployed CareerCraft application.
+4. Map all existing user journeys.
+5. Identify current defects and technical limitations.
+6. Create:
+   - QA_LAB_IMPLEMENTATION_PLAN.md
+   - ARCHITECTURE.md
+   - TESTING_STRATEGY.md
+7. Create a baseline smoke test suite before major changes.
+
+Do not make major architectural changes until this discovery is complete.
+
+
+=========================================================
+PHASE 1 — PRODUCTION-LIKE CAREER PLATFORM
+=========================================================
+
+Expand CareerCraft while preserving its current features.
+
+Roles:
+- Guest
+- Candidate
+- Recruiter
+- Hiring Manager
+- Admin
+
+Core functionality:
+- registration
+- login/logout
+- candidate profile
+- skills
+- experience
+- education
+- resume
+- job search
+- job details
+- filters
+- sorting
+- pagination
+- saved jobs
+- job application
+- application tracking
+- recruiter dashboard
+- create/edit/close jobs
+- candidate management
+- interview scheduling
+- notifications
+- audit history
+- admin controls
+
+Create realistic business rules and validation.
+
+
+=========================================================
+PHASE 2 — DATABASE / DATA MODEL
+=========================================================
+
+Prefer PostgreSQL for a realistic production-like environment if compatible
+with the existing stack.
+
+Recommended entities:
+
+users
+roles
+permissions
+user_roles
+
+candidates
+candidate_skills
+candidate_experience
+candidate_education
+
+companies
+jobs
+job_skills
+
+applications
+application_status_history
+
+interviews
+interview_feedback
+
+resumes
+files
+
+notifications
+messages
+
+sessions
+refresh_tokens
+
+audit_logs
+feature_flags
+
+Requirements:
+- primary keys
+- foreign keys
+- unique constraints
+- indexes
+- timestamps
+- soft deletion where appropriate
+- transactions
+- referential integrity
+- realistic relationships
+
+Never expose DB credentials through frontend code.
+
+
+=========================================================
+PHASE 3 — TEST DATA FACTORY
+=========================================================
+
+Build deterministic test-data generation.
+
+Support:
+- normal data
+- boundary values
+- empty values
+- null values
+- duplicates
+- invalid values
+- Unicode
+- special characters
+- very long strings
+- large payloads
+- realistic users/jobs/applications
+
+Commands should include equivalents of:
+
+seed:test
+seed:large
+seed:performance
+seed:cleanup
+
+Allow configurable dataset sizes:
+1
+10
+100
+1,000
+10,000+
+records where appropriate.
+
+Every test run should be able to identify and clean its own test data.
+
+
+=========================================================
+PHASE 4 — UI AUTOMATION LAB
+=========================================================
+
+Create dedicated automation challenge pages/components.
+
+BEGINNER:
+- text input
+- textarea
+- button
+- checkbox
+- radio
+- dropdown
+- forms
+- validation
+- tables
+
+INTERMEDIATE:
+- dynamic tables
+- sorting
+- filtering
+- pagination
+- autocomplete
+- date picker
+- modal
+- toast
+- alert
+- file upload
+- file download
+- multi-step form
+
+ADVANCED:
+- iframe
+- nested iframe
+- Shadow DOM
+- dynamic IDs
+- dynamic elements
+- infinite scroll
+- virtualized lists
+- drag/drop
+- multiple tabs
+- popup
+- delayed elements
+- stale-state scenarios
+- race conditions
+- WebSocket
+- real-time UI updates
+
+Use realistic locators.
+Provide stable data-testid attributes where appropriate.
+Do not make every element artificially easy.
+
+
+=========================================================
+PHASE 5 — FUNCTIONAL TESTING LAB
+=========================================================
+
+Provide scenarios for:
+
+- positive testing
+- negative testing
+- boundary testing
+- equivalence partitioning
+- decision-table scenarios
+- state-transition scenarios
+- CRUD
+- business-rule validation
+- validation messages
+- error handling
+- smoke testing
+- sanity testing
+- regression testing
+- re-testing
+- end-to-end workflows
+- integration workflows
+
+Create explicit expected results for each major scenario.
+
+
+=========================================================
+PHASE 6 — AUTHENTICATION LAB
+=========================================================
+
+Implement/test:
+
+- registration
+- login
+- logout
+- password policy
+- invalid password
+- invalid username
+- session expiration
+- refresh token
+- revoked token
+- expired token
+- malformed token
+- remember me
+- account lockout
+- concurrent sessions
+- password reset
+- reset-token expiry
+- optional MFA simulation
+
+Create dedicated test accounts for each role.
+
+
+=========================================================
+PHASE 7 — AUTHORIZATION / RBAC LAB
+=========================================================
+
+Implement role-based access control.
+
+Candidate:
+- own profile
+- own applications
+- cannot create jobs
+- cannot access admin APIs
+
+Recruiter:
+- manage permitted jobs
+- manage applications
+- view permitted candidates
+
+Hiring Manager:
+- manage hiring workflows
+
+Admin:
+- user management
+- QA controls
+- feature flags
+- audit access
+
+Test:
+- role escalation
+- horizontal access violations
+- vertical access violations
+- object-level authorization
+- unauthorized API access
+- UI/API permission mismatch
+
+Protect against IDOR/BOLA-style access problems.
+
+
+=========================================================
+PHASE 8 — REST API LAB
+=========================================================
+
+Provide documented APIs.
+
+Authentication:
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
+
+Users:
+GET /api/users/:id
+PUT /api/users/:id
+DELETE /api/users/:id
+
+Jobs:
+GET /api/jobs
+GET /api/jobs/:id
+POST /api/jobs
+PUT /api/jobs/:id
+DELETE /api/jobs/:id
+
+Applications:
+POST /api/jobs/:id/apply
+GET /api/applications
+GET /api/applications/:id
+PUT /api/applications/:id/status
+
+Candidates:
+GET /api/candidates
+GET /api/candidates/:id
+
+Interviews:
+POST /api/interviews
+GET /api/interviews
+PUT /api/interviews/:id
+
+Use correct HTTP responses:
+200
+201
+204
+400
+401
+403
+404
+409
+422
+429
+500
+503
+
+Use consistent error schemas.
+
+Add:
+- request ID
+- correlation ID
+- pagination
+- filtering
+- sorting
+- validation
+- schema documentation
+- OpenAPI/Swagger if compatible.
+
+
+=========================================================
+PHASE 9 — API CONTRACT / INTEGRATION TESTING
+=========================================================
+
+Add API tests for:
+
+- request schema
+- response schema
+- required fields
+- data types
+- nullability
+- status codes
+- headers
+- authentication
+- authorization
+- pagination
+- sorting
+- filtering
+- backward compatibility
+
+Where practical, introduce contract testing between frontend and backend.
+
+
+=========================================================
+PHASE 10 — API FAULT-INJECTION LAB
+=========================================================
+
+Create an ADMIN/QA-only control panel.
+
+Allow controlled simulation for selected test endpoints:
+
+- 400
+- 401
+- 403
+- 404
+- 409
+- 422
+- 429
+- 500
+- 503
+- delayed response
+- timeout
+- intermittent failure
+- configurable failure probability
+
+Example:
+Endpoint: POST /api/applications
+Failure: 500
+Delay: 3000ms
+Probability: 20%
+
+Use environment guards so this cannot accidentally be enabled in production.
+
+
+=========================================================
+PHASE 11 — DATABASE TESTING LAB
+=========================================================
+
+Provide realistic DB validation opportunities.
+
+Test:
+- CRUD
+- joins
+- foreign keys
+- constraints
+- unique records
+- duplicate prevention
+- referential integrity
+- transactions
+- rollback
+- cascading rules
+- data consistency
+- concurrent updates
+- migration behavior
+- audit records
+- soft deletion
+
+Create read-only QA inspection functionality if needed.
+
+Never provide arbitrary SQL execution from a public frontend.
+
+
+=========================================================
+PHASE 12 — FILE TESTING LAB
+=========================================================
+
+Resume/file functionality should support testing of:
+
+- valid files
+- invalid extensions
+- wrong MIME types
+- oversized files
+- empty files
+- duplicate files
+- corrupted files
+- filenames with Unicode
+- long filenames
+- download behavior
+- authorization
+- deletion
+- replacement
+
+Validate file size, type and access permissions server-side.
+
+
+=========================================================
+PHASE 13 — ACCESSIBILITY LAB
+=========================================================
+
+Support testing of:
+
+- keyboard navigation
+- tab order
+- focus management
+- focus traps
+- accessible names
+- labels
+- ARIA
+- headings
+- color contrast
+- alt text
+- form errors
+- screen readers
+- semantic HTML
+- zoom/text resizing
+
+Create a separate controlled accessibility challenge area with a few
+intentional defects for training.
+
+Do not degrade the main application unnecessarily.
+
+
+=========================================================
+PHASE 14 — VISUAL REGRESSION LAB
+=========================================================
+
+Create stable pages for screenshot comparison:
+
+- homepage
+- jobs
+- job details
+- candidate profile
+- recruiter dashboard
+- application flow
+- admin dashboard
+- QA dashboard
+
+Support baseline/current screenshot comparison.
+
+Detect:
+- layout shifts
+- missing elements
+- font changes
+- spacing changes
+- responsive defects
+- visual regressions.
+
+
+=========================================================
+PHASE 15 — RESPONSIVE / COMPATIBILITY LAB
+=========================================================
+
+Support/test:
+
+320px
+375px
+414px
+768px
+1024px
+1280px
+1440px
+1920px
+
+Test:
+- mobile
+- tablet
+- desktop
+- ultrawide
+- portrait
+- landscape
+
+Ensure realistic responsive behavior.
+
+Prepare the app for Playwright cross-browser testing:
+- Chromium
+- Firefox
+- WebKit
+
+
+=========================================================
+PHASE 16 — NETWORK / RESILIENCE LAB
+=========================================================
+
+Create controlled scenarios for:
+
+- offline
+- slow network
+- high latency
+- API timeout
+- temporary API failure
+- retry
+- reconnect
+- partial failure
+- stale data
+- server unavailable
+
+Verify user-friendly recovery states.
+
+
+=========================================================
+PHASE 17 — PERFORMANCE LAB
+=========================================================
+
+Create controlled performance endpoints:
+
+/api/performance/fast
+/api/performance/normal
+/api/performance/slow
+/api/performance/timeout
+/api/performance/database-heavy
+/api/performance/large-response
+/api/performance/cpu
+
+Support controlled response delay and payload size.
+
+Do not create unsafe infinite-resource endpoints.
+
+
+=========================================================
+PHASE 18 — LOAD / STRESS / SPIKE / SOAK
+=========================================================
+
+Use k6 or another suitable load-testing tool.
+
+Create scripts for:
+
+1. Smoke
+2. Baseline
+3. Load
+4. Stress
+5. Spike
+6. Soak/endurance
+7. Capacity
+
+Measure:
+- requests/sec
+- throughput
+- p50
+- p90
+- p95
+- p99
+- max latency
+- error rate
+- HTTP status distribution
+
+Example controlled profiles:
+
+Smoke:
+5 users / 1 minute
+
+Load:
+100 users / 10 minutes
+
+Stress:
+increase gradually until defined threshold
+
+Spike:
+10 -> 500 users rapidly
+
+Soak:
+100 users / several hours
+
+Never execute destructive stress tests against production.
+
+
+=========================================================
+PHASE 19 — CONCURRENCY / RACE CONDITION LAB
+=========================================================
+
+Create deterministic concurrency scenarios.
+
+Examples:
+- two users editing same record
+- two users applying for last available slot
+- duplicate application requests
+- concurrent profile updates
+- simultaneous application status changes
+- simultaneous interview booking
+
+Expected results must be deterministic.
+
+Use:
+- transactions
+- constraints
+- locking
+- optimistic concurrency where appropriate.
+
+
+=========================================================
+PHASE 20 — IDEMPOTENCY LAB
+=========================================================
+
+Implement idempotency keys where appropriate.
+
+Test repeated requests for:
+- applications
+- interview creation
+- notifications
+- other business operations
+
+Repeated identical requests must not create unintended duplicates.
+
+
+=========================================================
+PHASE 21 — SECURITY TESTING LAB
+=========================================================
+
+Create a safe isolated security-training section.
+
+Cover:
+
+- authentication
+- authorization
+- session security
+- CSRF
+- CORS
+- security headers
+- cookie flags
+- rate limiting
+- input validation
+- output encoding
+- file upload security
+- sensitive data exposure
+- error leakage
+- password handling
+- API authorization
+
+Include automated security checks where safe.
+
+Intentionally vulnerable demonstrations, if any, must be isolated,
+clearly labelled training-only and disabled from normal production use.
+
+
+=========================================================
+PHASE 22 — RATE LIMITING / ABUSE LAB
+=========================================================
+
+Implement configurable rate limits for selected endpoints.
+
+Test:
+- normal traffic
+- burst traffic
+- repeated login attempts
+- repeated API calls
+- 429 behavior
+- Retry-After
+- recovery after rate-limit window
+
+Ensure legitimate traffic is not permanently blocked.
+
+
+=========================================================
+PHASE 23 — CACHE / STATE LAB
+=========================================================
+
+Where caching is used, provide testable scenarios for:
+
+- cache hit
+- cache miss
+- stale cache
+- invalidation
+- cache refresh
+- concurrent cache access
+- stale UI state
+
+Do not add unnecessary caching solely for complexity.
+
+
+=========================================================
+PHASE 24 — REAL-TIME / WEBSOCKET LAB
+=========================================================
+
+If compatible with the stack, add real-time features:
+
+- notifications
+- application status updates
+- recruiter updates
+- interview updates
+
+Test:
+- connection
+- reconnect
+- disconnect
+- duplicate messages
+- out-of-order messages
+- stale connections
+- multiple tabs
+- authentication
+- authorization.
+
+
+=========================================================
+PHASE 25 — OBSERVABILITY LAB
+=========================================================
+
+Implement:
+
+- structured logs
+- request ID
+- correlation ID
+- API timing
+- DB timing
+- audit logs
+- error logs
+- health endpoint
+- readiness endpoint
+
+Endpoints:
+
+GET /health
+GET /ready
+
+Do not expose secrets or sensitive user data.
+
+
+=========================================================
+PHASE 26 — FEATURE FLAG LAB
+=========================================================
+
+Create feature flags such as:
+
+newSearch
+newDashboard
+newApplicationFlow
+experimentalAPI
+
+Test:
+- flag ON
+- flag OFF
+- role-based flags
+- environment-based flags
+- default behavior
+- rollback behavior.
+
+
+=========================================================
+PHASE 27 — ADMIN QA CONTROL CENTER
+=========================================================
+
+Create /qa-lab.
+
+Sections:
+
+1. UI Testing
+2. Functional Testing
+3. API Testing
+4. Database Testing
+5. Authentication
+6. Authorization
+7. Accessibility
+8. Visual Testing
+9. Responsive Testing
+10. Performance
+11. Load Testing
+12. Stress Testing
+13. Spike Testing
+14. Soak Testing
+15. Concurrency
+16. Fault Injection
+17. Network Simulation
+18. Security
+19. Test Data
+20. Observability
+21. Feature Flags
+
+Each section should contain real executable scenarios and configuration,
+not merely documentation.
+
+The QA Lab must be protected by role and environment guards.
+
+
+=========================================================
+PHASE 28 — AUTOMATION FRAMEWORK
+=========================================================
+
+Create a separate test automation structure.
+
+Recommended:
+
+tests/
+  ui/
+  api/
+  integration/
+  database/
+  accessibility/
+  visual/
+  security/
+  performance/
+  e2e/
+
+Use Playwright for browser/E2E tests.
+
+Use API tests independently from UI tests.
+
+Use database assertions independently where appropriate.
+
+Use k6 for load/performance.
+
+Implement:
+- fixtures
+- page objects/components
+- API clients
+- test data factories
+- environment configuration
+- authentication fixtures
+- reusable assertions
+- tagging
+- parallel execution
+- retries only where justified.
+
+
+=========================================================
+PHASE 29 — CI/CD
+=========================================================
+
+Create CI pipelines for:
+
+1. lint
+2. unit tests
+3. API tests
+4. smoke UI tests
+5. full UI regression
+6. accessibility
+7. integration
+8. visual regression
+9. performance smoke
+
+Generate:
+- HTML reports
+- screenshots
+- traces
+- videos when useful
+- API reports
+- performance summaries
+
+Do not run heavy stress/soak tests against production automatically.
+
+
+=========================================================
+PHASE 30 — TEST REPORTING / QUALITY DASHBOARD
+=========================================================
+
+Create a QA dashboard showing:
+
+- total tests
+- passed
+- failed
+- skipped
+- duration
+- pass rate
+- API failures
+- UI failures
+- accessibility findings
+- performance thresholds
+- regression status
+- recent runs
+
+Support test-run IDs and timestamps.
+
+
+=========================================================
+PHASE 31 — SEO / WEB QUALITY
+=========================================================
+
+Add testable scenarios for:
+
+- page title
+- meta description
+- canonical URLs
+- robots behavior
+- sitemap
+- broken links
+- redirects
+- 404
+- structured data where appropriate
+- semantic HTML
+- page performance.
+
+
+=========================================================
+PHASE 32 — PRIVACY / DATA HANDLING
+=========================================================
+
+Ensure:
+
+- passwords are never logged
+- tokens are never logged
+- secrets are not returned by APIs
+- sensitive data is masked in logs
+- users cannot access other users' private data
+- test data is clearly separated from real data
+- production data is never copied into test environments without proper
+  controls.
+
+
+=========================================================
+PHASE 33 — FAILURE / RECOVERY TESTING
+=========================================================
+
+Provide controlled tests for:
+
+- API unavailable
+- database unavailable
+- timeout
+- expired session
+- network disconnect
+- failed file upload
+- failed notification
+- partial workflow failure
+- retry
+- recovery
+- rollback
+
+The application should show predictable, useful error states.
+
+
+=========================================================
+PHASE 34 — DOCUMENTATION
+=========================================================
+
+Create:
+
+README.md
+ARCHITECTURE.md
+QA_LAB_IMPLEMENTATION_PLAN.md
+TESTING_STRATEGY.md
+UI_TESTING.md
+API_TESTING.md
+DATABASE_TESTING.md
+ACCESSIBILITY_TESTING.md
+SECURITY_TESTING.md
+PERFORMANCE_TESTING.md
+LOAD_TESTING.md
+AUTOMATION_GUIDE.md
+CI_CD.md
+TROUBLESHOOTING.md
+
+Document how a QA/SDET engineer can practice each testing category.
+
+
+=========================================================
+PHASE 35 — FINAL QA COVERAGE MATRIX
+=========================================================
+
+Create a coverage matrix mapping every application feature to:
+
+- UI test
+- API test
+- DB test
+- integration test
+- accessibility test
+- security test
+- performance test
+- negative test
+- boundary test
+- regression test
+
+Example:
+
+LOGIN
+UI              YES
+API             YES
+DB              YES
+Security        YES
+Negative        YES
+Boundary        YES
+Performance     YES
+Accessibility   YES
+Regression      YES
+
+
+=========================================================
+RECOMMENDED TESTING TECHNOLOGY
+=========================================================
+
+Prefer tools that are free/open-source where practical.
+
+Browser/UI:
+- Playwright
+
+API:
+- Playwright API testing or a suitable API test framework
+
+Performance:
+- k6
+
+Database:
+- PostgreSQL
+- SQL client/VS Code database extension
+
+Accessibility:
+- axe-core / Playwright integration where appropriate
+
+Visual:
+- Playwright screenshots / visual comparisons
+
+Unit/integration:
+- framework appropriate to the existing stack
+
+CI/CD:
+- GitHub Actions
+
+Reporting:
+- Playwright HTML reports
+- k6 output
+- CI artifacts
+
+
+=========================================================
+ENGINEERING RULES
+=========================================================
+
+1. Inspect before modifying.
+2. Preserve existing functionality.
+3. Implement incrementally.
+4. Keep application code and test infrastructure separated.
+5. Use environment variables.
+6. Never commit secrets.
+7. Never expose DB credentials to frontend.
+8. Use deterministic test data.
+9. Give every test scenario a clear expected result.
+10. Use stable selectors where appropriate.
+11. Keep failure injection disabled by default.
+12. Keep security training scenarios isolated.
+13. Keep heavy performance tests controlled.
+14. Never target production with destructive tests.
+15. Avoid unnecessary dependencies.
+16. Prefer maintainable architecture over clever code.
+17. Add tests for every new feature.
+18. Run relevant tests after every phase.
+19. Fix regressions before continuing.
+20. Do not claim a phase is complete until it has been verified.
+
+
+=========================================================
+IMPLEMENTATION WORKFLOW FOR COPILOT
+=========================================================
+
+For EACH phase:
+
+1. Explain what currently exists.
+2. Identify files that will change.
+3. Propose the smallest safe implementation.
+4. Implement the phase.
+5. Run lint/build/tests.
+6. Fix failures.
+7. Verify manually where required.
+8. Update documentation.
+9. Report:
+   - changed files
+   - new functionality
+   - tests executed
+   - test results
+   - known limitations
+10. Wait before starting the next major phase if the implementation
+    introduces architectural uncertainty.
+
+Do NOT attempt to implement all phases in one operation.
+
+Start with PHASE 0.
+
+After PHASE 0 is complete and verified, proceed sequentially through
+PHASE 1 onward.
+
+
+=========================================================
+DEFINITION OF DONE
+=========================================================
+
+CareerCraft should ultimately function as a comprehensive QA/SDET
+laboratory capable of supporting practical exercises in:
+
+Functional Testing
+Smoke Testing
+Sanity Testing
+Regression Testing
+Retesting
+Negative Testing
+Boundary Testing
+Equivalence Partitioning
+Decision Tables
+State Transitions
+UI Testing
+E2E Testing
+API Testing
+Contract Testing
+Integration Testing
+Database Testing
+Authentication Testing
+Authorization Testing
+RBAC
+Accessibility Testing
+Visual Regression
+Responsive Testing
+Cross-Browser Testing
+File Testing
+Security Testing
+Rate-Limit Testing
+Performance Testing
+Load Testing
+Stress Testing
+Spike Testing
+Soak Testing
+Capacity Testing
+Concurrency Testing
+Race-Condition Testing
+Idempotency Testing
+Resilience Testing
+Network Testing
+Real-Time/WebSocket Testing
+Observability
+Test Data Management
+Feature Flag Testing
+CI/CD
+Test Reporting
+
+The final product should feel like a small production system deliberately
+engineered to give QA/SDET engineers realistic testing challenges.
+
+The goal is not to make a "demo test website".
+
+The goal is to build a reusable, maintainable, full-stack QA laboratory.
