@@ -1,0 +1,17 @@
+{% extends "auth_base.html" %}
+{% block title %}Create account - CareerCraft{% endblock %}
+{% block page_id %}sign-up{% endblock %}
+{% block content %}
+<p class="eyebrow">CREATE PRIVATE WORKSPACE</p>
+<h2>Start with your own evidence.</h2>
+<p class="auth-copy">If this is the first account on this device, the existing local CareerCraft data will be retained here.</p>
+<form id="signUpForm" class="auth-form" data-next="{{ next_path }}">
+  <label>Your name<input id="signUpName" type="text" autocomplete="name" minlength="2" maxlength="80" required></label>
+  <label>Email address<input id="signUpEmail" type="email" autocomplete="email" required></label>
+  <label>Password<input id="signUpPassword" type="password" autocomplete="new-password" minlength="10" required aria-describedby="passwordHelp"></label>
+  <p id="passwordHelp" class="field-help">At least 10 characters, with one letter and one number.</p>
+  <button class="button button-primary" type="submit">Create account</button>
+</form>
+<p class="auth-switch">Already have an account? <a href="/sign-in{% if next_path != '/' %}?next={{ next_path | urlencode }}{% endif %}">Sign in</a></p>
+<p class="fine-print">CareerCraft does not auto-apply, scrape LinkedIn, or invent resume claims.</p>
+{% endblock %}

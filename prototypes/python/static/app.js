@@ -15,8 +15,18 @@
   let jobWatchTimer = null;
   let profileTemplateActive = false;
 
+  function csrfToken() {
+    return document.body.dataset.csrfToken || '';
+  }
+
+  function updateCsrfToken(value) {
+    if (value) document.body.dataset.csrfToken = String(value);
+  }
+
   async function api(path, options = {}) {
     const config = { ...options, headers: { ...(options.headers || {}) } };
+    const method = String(config.method || 'GET').toUpperCase();
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && csrfToken()) config.headers['X-CSRF-Token'] = csrfToken();
     if (config.body && !(config.body instanceof FormData) && typeof config.body !== 'string') {
       config.headers['Content-Type'] = 'application/json';
       config.body = JSON.stringify(config.body);
@@ -24,7 +34,12 @@
     const response = await fetch(path, config);
     const contentType = response.headers.get('content-type') || '';
     const payload = contentType.includes('application/json') ? await response.json() : null;
-    if (!response.ok) throw new Error((payload && payload.error) || 'Something went wrong. Please try again.');
+    if (!response.ok) {
+      if (response.status === 401 && !['sign-in', 'sign-up'].includes(page)) {
+        window.location.href = `/sign-in?next=${encodeURIComponent(window.location.pathname)}`;
+      }
+      throw new Error((payload && payload.error) || 'Something went wrong. Please try again.');
+    }
     return payload;
   }
 
@@ -670,6 +685,13 @@
     if (list.children.length) container.append(list);
   }
 
+  function selectJobFilter(status) {
+    const tab = $(`.filter-tab[data-job-filter="${status}"]`);
+    if (!tab) return;
+    $$('.filter-tab').forEach((item) => item.classList.toggle('active', item === tab));
+    loadJobs(status);
+  }
+
   function renderLatestSearchResults(jobs, market) {
     const panel = $('#searchResultsPanel');
     const list = $('#latestSearchList');
@@ -679,24 +701,27 @@
     clear(list);
     panel.hidden = false;
     count.textContent = `${jobs.length} ${jobs.length === 1 ? 'role' : 'roles'}`;
-    status.textContent = `Latest live results for ${market || 'your selected market'}. Review each original listing before saving it to the approval queue.`;
+    status.textContent = jobs.length
+      ? `These are the exact records from the latest ${market || 'selected-market'} search. They remain visible here even when a record is already approved, rejected, or filtered out of the inbox.`
+      : 'No eligible roles were returned by this search. Review the source report, change the query, or add a role manually.';
     jobs.slice(0, 30).forEach((job) => {
       const card = node('article', { className: 'latest-search-card' });
       card.append(node('h3', { text: job.title || 'Untitled role' }));
       card.append(node('p', { className: 'job-meta', text: [job.company, job.location, job.source].filter(Boolean).join(' / ') }));
       card.append(node('p', { className: 'job-insight', text: (job.description || '').slice(0, 260) }));
+      const tags = node('div', { className: 'job-tags' }, [
+        createChip(job.search_result_state === 'created' ? 'New from this search' : 'Already saved', job.search_result_state === 'created' ? 'chip-positive' : 'chip-neutral'),
+        createChip(titleCase(job.status || 'new'), `status-${job.status || 'new'}`),
+        createChip(job.role_track || 'Test Engineer', 'chip-neutral'),
+      ]);
+      card.append(tags);
       const actions = node('div', { className: 'job-actions' });
       if (job.source_url) actions.append(node('a', { className: 'text-button', href: job.source_url, target: '_blank', rel: 'noopener noreferrer', text: 'Open original listing' }));
-      const save = node('button', { className: 'button button-small button-primary', type: 'button', text: 'Save to review queue' });
-      save.addEventListener('click', async () => {
-        save.disabled = true;
-        try {
-          const result = await api('/api/jobs', { method: 'POST', body: job });
-          save.textContent = result.created ? 'Saved to review queue' : 'Already in review queue';
-          toast(result.message || 'Role saved.');
-        } catch (error) { toast(error.message, 'error'); save.disabled = false; }
-      });
-      actions.append(save);
+      const tailor = node('button', { className: 'button button-small button-primary', type: 'button', text: 'Tailor resume' });
+      tailor.addEventListener('click', () => { storeBuilderDraft(job); window.location.href = '/builder'; });
+      const view = node('button', { className: 'text-button', type: 'button', text: `View ${titleCase(job.status || 'new')} queue` });
+      view.addEventListener('click', () => selectJobFilter(job.status === 'closed' ? 'closed' : job.status === 'new' ? 'new' : 'all'));
+      actions.append(tailor, view);
       card.append(actions);
       list.append(card);
     });
@@ -713,13 +738,15 @@
       if (!silent) toast(data.message);
       const cachedLabel = data.cached ? 'Saved search' : 'Live refresh';
       renderSourceReport(data.source_report, `${cachedLabel}: ${formatDate(data.checked_at)}`);
-      if (!data.cached) renderLatestSearchResults(data.jobs || [], discoveryPayload().market);
-      const visibleCount = await loadJobs(window.currentJobFilter || 'new');
+      renderLatestSearchResults(data.results || data.jobs || [], discoveryPayload().market);
+      if (data.added > 0) selectJobFilter('new');
+      const activeStatus = window.currentJobFilter || 'new';
+      const visibleCount = await loadJobs(activeStatus);
       if (summary) {
         summary.hidden = false;
         summary.textContent = visibleCount
-          ? `${data.reviewed || 0} roles matched the search. ${visibleCount} ${visibleCount === 1 ? 'opportunity is' : 'opportunities are'} visible in the current ${window.currentJobFilter || 'new'} queue.`
-          : `${data.reviewed || 0} roles matched the search, but none are visible in the current ${window.currentJobFilter || 'new'} queue. Try the Active or Worldwide view.`;
+          ? `${data.reviewed || 0} roles were recorded in Latest search results. ${data.added || 0} new role(s) are in New; ${visibleCount} role(s) are visible in the current ${activeStatus} inbox view.`
+          : `${data.reviewed || 0} roles were recorded in Latest search results. The current ${activeStatus} inbox filter has no visible roles; the exact search cards remain above.`;
       }
       return data;
     } catch (error) {
@@ -795,6 +822,8 @@
     $('#marketFilter').addEventListener('change', updateGoogleSearchLink);
     $('#roleTrackFilter').addEventListener('change', updateGoogleSearchLink);
     $('#enableJobsNotifications').addEventListener('click', notificationPermission);
+    const latestQueueButton = $('#latestSearchQueueButton');
+    if (latestQueueButton) latestQueueButton.addEventListener('click', () => selectJobFilter('new'));
     $('#linkedinManualForm').addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!event.currentTarget.reportValidity()) return;
@@ -1164,6 +1193,181 @@
     });
   }
 
+  function afterAuth(form, result) {
+    updateCsrfToken(result.csrf_token);
+    const next = (form && form.dataset.next) || '/';
+    window.location.href = next.startsWith('/') && !next.startsWith('//') ? next : '/';
+  }
+
+  function initSignIn() {
+    const form = $('#signInForm');
+    if (!form) return;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const button = $('button[type="submit"]', form);
+      button.disabled = true;
+      try {
+        const result = await api('/api/auth/login', { method: 'POST', body: { email: $('#signInEmail').value.trim(), password: $('#signInPassword').value } });
+        afterAuth(form, result);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { button.disabled = false; }
+    });
+  }
+
+  function initSignUp() {
+    const form = $('#signUpForm');
+    if (!form) return;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const button = $('button[type="submit"]', form);
+      button.disabled = true;
+      try {
+        const result = await api('/api/auth/register', { method: 'POST', body: { display_name: $('#signUpName').value.trim(), email: $('#signUpEmail').value.trim(), password: $('#signUpPassword').value } });
+        afterAuth(form, result);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { button.disabled = false; }
+    });
+  }
+
+  function initAccount() {
+    const form = $('#accountForm');
+    if (!form) return;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const current = $('#accountCurrentPassword').value;
+      const next = $('#accountNewPassword').value;
+      if (next && !current) { toast('Enter your current password to choose a new one.', 'warning'); return; }
+      const button = $('button[type="submit"]', form);
+      button.disabled = true;
+      try {
+        const result = await api('/api/account', { method: 'PATCH', body: { display_name: $('#accountDisplayName').value.trim(), current_password: current, new_password: next } });
+        $('#accountCurrentPassword').value = '';
+        $('#accountNewPassword').value = '';
+        toast(result.message || 'Account settings saved.');
+        if (result.user && result.user.display_name) window.setTimeout(() => window.location.reload(), 450);
+      } catch (error) { toast(error.message, 'error'); }
+      finally { button.disabled = false; }
+    });
+  }
+
+  function initSessionActions() {
+    const signOut = $('#signOutButton');
+    if (!signOut) return;
+    signOut.addEventListener('click', async () => {
+      signOut.disabled = true;
+      try { await api('/api/auth/logout', { method: 'POST', body: {} }); }
+      catch (_) { /* The browser will still leave this private route. */ }
+      finally { window.location.href = '/sign-in'; }
+    });
+  }
+
+  function runStatusChip(status) {
+    return createChip(titleCase(status || 'in_progress'), `status-${status || 'new'}`);
+  }
+
+  function renderLabRuns(container, runs, compact = false) {
+    if (!container) return;
+    clear(container);
+    if (!runs.length) {
+      container.append(emptyState('No QA evidence yet', 'Run a real scenario, then save the expected result, actual result, and any artifact reference.', 'Record a test run', '/lab/runs'));
+      return;
+    }
+    runs.slice(0, compact ? 4 : 60).forEach((run) => {
+      const item = node('article', { className: 'lab-run-item' });
+      const head = node('div', { className: 'lab-run-item-head' }, [node('div', {}, [node('h3', { text: titleCase(String(run.scenario_slug || '').replace(/-/g, ' ')) }), node('p', { text: `${titleCase(run.suite)} / ${formatDate(run.created_at)}` })]), runStatusChip(run.status)]);
+      item.append(head);
+      if (run.notes) item.append(node('p', { className: 'lab-run-notes', text: run.notes }));
+      container.append(item);
+    });
+  }
+
+  async function loadLabSummary() {
+    const data = await api('/api/lab/quality-summary');
+    const scenario = $('#labScenarioCount');
+    const catalog = $('#labCatalogCount');
+    const passed = $('#labPassedRuns');
+    const gates = $('#labGateCount');
+    if (scenario) scenario.textContent = data.scenarios || 0;
+    if (catalog) catalog.textContent = data.catalog_items || 0;
+    if (passed) passed.textContent = (data.runs && data.runs.passed) || 0;
+    if (gates) gates.textContent = (data.gates || []).length;
+    const gateList = $('#labGates');
+    if (gateList) { clear(gateList); (data.gates || []).forEach((gate) => gateList.append(node('li', { text: gate }))); }
+    return data;
+  }
+
+  async function loadLabRuns(container = $('#labRunsList'), compact = false) {
+    const data = await api('/api/lab/runs');
+    renderLabRuns(container, data.runs || [], compact);
+    return data.runs || [];
+  }
+
+  function initLabOverview() {
+    Promise.all([loadLabSummary(), loadLabRuns($('#labRecentRuns'), true)]).catch((error) => toast(error.message, 'error'));
+  }
+
+  async function loadLabCatalog() {
+    const container = $('#labCatalogList');
+    if (!container) return [];
+    try {
+      const data = await api('/api/lab/catalog');
+      clear(container);
+      if (!data.items.length) container.append(emptyState('No catalog data', 'Refresh the QA Lab to seed synthetic practice data.'));
+      data.items.forEach((item) => {
+        const row = node('div', { className: 'lab-catalog-item' }, [node('div', {}, [node('strong', { text: item.name }), node('span', { text: `${item.sku} / ${item.category}` })]), node('div', { className: 'lab-catalog-values' }, [node('span', { text: `Rs. ${Number(item.price).toFixed(2)}` }), node('span', { text: `${item.stock} in stock` })])]);
+        container.append(row);
+      });
+      const product = $('#labOrderProduct');
+      if (product && !product.value && data.items[0]) product.value = data.items[0].id;
+      return data.items;
+    } catch (error) { clear(container); container.append(emptyState('Catalog unavailable', error.message)); return []; }
+  }
+
+  function initLabApi() {
+    loadLabCatalog();
+    const refresh = $('#refreshLabCatalog');
+    if (refresh) refresh.addEventListener('click', () => loadLabCatalog());
+    const form = $('#labOrderForm');
+    if (!form) return;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const button = $('button[type="submit"]', form);
+      const response = $('#labOrderResponse');
+      button.disabled = true;
+      try {
+        const result = await api('/api/lab/orders', { method: 'POST', body: { customer_name: $('#labOrderCustomer').value.trim(), idempotency_key: $('#labOrderIdempotency').value.trim(), items: [{ product_id: Number($('#labOrderProduct').value), quantity: Number($('#labOrderQuantity').value) }] } });
+        response.textContent = JSON.stringify(result, null, 2);
+        toast(result.message || 'Synthetic order created.');
+        await loadLabCatalog();
+      } catch (error) { response.textContent = JSON.stringify({ error: error.message }, null, 2); toast(error.message, 'error'); }
+      finally { button.disabled = false; }
+    });
+  }
+
+  function initLabRuns() {
+    const form = $('#labRunForm');
+    const scenarioFromQuery = new URLSearchParams(window.location.search).get('scenario');
+    if (scenarioFromQuery && $('#labRunScenario')) $('#labRunScenario').value = scenarioFromQuery;
+    loadLabRuns().catch((error) => toast(error.message, 'error'));
+    if (!form) return;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = $('button[type="submit"]', form);
+      button.disabled = true;
+      try {
+        const result = await api('/api/lab/runs', { method: 'POST', body: { scenario_slug: $('#labRunScenario').value, suite: $('#labRunSuite').value, status: $('#labRunStatus').value, notes: $('#labRunNotes').value.trim() } });
+        toast(result.message || 'QA run saved.');
+        $('#labRunNotes').value = '';
+        await loadLabRuns();
+      } catch (error) { toast(error.message, 'error'); }
+      finally { button.disabled = false; }
+    });
+  }
+
   function initNotifications() {
     const globalButton = $('#enableNotifications');
     if (globalButton) globalButton.addEventListener('click', notificationPermission);
@@ -1171,12 +1375,20 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     initNotifications();
+    initSessionActions();
+    if (page === 'sign-in') initSignIn();
+    if (page === 'sign-up') initSignUp();
+    if (page === 'account') initAccount();
     if (page === 'dashboard') loadDashboard();
     if (page === 'profile') initProfile();
     if (page === 'builder') initBuilder();
+    if (page === 'resumes') loadResumeVersions();
     if (page === 'jobs') initJobs();
     if (page === 'applications') initApplications();
     if (page === 'resources') initResources();
     if (page === 'assistant') initAssistant();
+    if (page === 'lab') initLabOverview();
+    if (page === 'lab-api') initLabApi();
+    if (page === 'lab-runs') initLabRuns();
   });
 }());

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - Account security{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <p class="eyebrow">ACCOUNT AND SECURITY</p>
+  <h1>Your workspace is <em>private</em>.</h1>
+  <p class="lede">Update your display name or password. Data is owned by this signed-in account and changes require a per-session security token.</p>
+</section>
+
+<section class="account-grid">
+  <article class="surface-card account-summary">
+    <span class="account-avatar account-avatar-large" aria-hidden="true">{{ current_user.display_name[:1] | upper }}</span>
+    <p class="eyebrow">SIGNED IN</p>
+    <h2>{{ current_user.display_name }}</h2>
+    <p>{{ current_user.email }}</p>
+    <span class="chip chip-positive">{{ current_user.role | title }} workspace</span>
+    <p class="fine-print">Use a different account or a private browser window to verify data isolation while testing.</p>
+  </article>
+  <article class="surface-card account-form-card">
+    <p class="eyebrow">SETTINGS</p>
+    <h2>Profile and password</h2>
+    <form id="accountForm" class="form-grid">
+      <label>Display name<input id="accountDisplayName" value="{{ current_user.display_name }}" minlength="2" maxlength="80" required></label>
+      <div class="form-divider"><span>Change password (optional)</span></div>
+      <label>Current password<input id="accountCurrentPassword" type="password" autocomplete="current-password"></label>
+      <label>New password<input id="accountNewPassword" type="password" autocomplete="new-password" minlength="10" aria-describedby="accountPasswordHelp"></label>
+      <p class="field-help" id="accountPasswordHelp">To change a password, enter the current password and a new 10+ character password with letters and numbers.</p>
+      <div class="form-actions"><button class="button button-primary" type="submit">Save account settings</button></div>
+    </form>
+  </article>
+</section>
+
+<section class="surface-card security-checklist">
+  <div><p class="eyebrow">TESTING CHECKLIST</p><h2>Use this page for security checks</h2></div>
+  <ul><li>Sign out, then request a protected API and expect 401.</li><li>Remove the CSRF header in an API client and expect 403 on a mutation.</li><li>Create a second account and verify it cannot access this account's record IDs.</li><li>Confirm browser password managers never see a returned password.</li></ul>
+</section>
+{% endblock %}

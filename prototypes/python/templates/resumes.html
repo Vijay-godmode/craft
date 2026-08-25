@@ -1,33 +1,22 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Saved Resumes</title>
-  <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-  <div class="container">
-    <h1>Saved Resumes</h1>
-    <a href="/">Back</a>
-    <table>
-      <thead><tr><th>ID</th><th>Filename</th><th>Saved At</th><th>Action</th></tr></thead>
-      <tbody>
-        {% for r in resumes %}
-        <tr>
-          <td>{{ r[0] }}</td>
-          <td>{{ r[3] }}</td>
-          <td>{{ r[4] }}</td>
-          <td>
-            <form method="post" action="/delete_resume" onsubmit="return confirm('Delete resume?');">
-              <input type="hidden" name="id" value="{{ r[0] }}" />
-              <button type="submit">Delete</button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+{% extends "base.html" %}
+{% block title %}CareerCraft - Resume library{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div>
+    <p class="eyebrow">RESUME LIBRARY</p>
+    <h1>Your role-specific Word <em>versions</em>.</h1>
+    <p class="lede">Every exported resume is linked to this private workspace. Re-download a version when you need it; create a new version when job requirements change.</p>
   </div>
-</body>
-</html>
+  <a class="button button-primary" href="/builder">Create tailored resume</a>
+</section>
+
+<section class="surface-card resume-library-card">
+  <div class="card-title-row"><div><p class="eyebrow">EXPORTED DOCX FILES</p><h2>Saved versions</h2></div><a class="text-link" href="/profile">Update master profile</a></div>
+  <div class="version-list" id="resumeVersions" aria-live="polite"><p class="muted">Loading your Word versions...</p></div>
+</section>
+
+<section class="surface-card principles-card">
+  <div><p class="eyebrow">TRUTH-FIRST EXPORTS</p><h2>What a version preserves</h2></div>
+  <ul><li>The factual profile snapshot used at export time</li><li>The job title and ATS-safe layout selected for that version</li><li>Matched evidence and visible gaps, without invented claims</li><li>A private, account-owned download history</li></ul>
+</section>
+{% endblock %}

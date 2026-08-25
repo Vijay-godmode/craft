@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - QA Lab{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div>
+    <p class="eyebrow">QA TESTING PLAYGROUND</p>
+    <h1>Learn by testing a <em>working product</em>.</h1>
+    <p class="lede">The QA Lab uses this same authenticated CareerCraft workspace with synthetic practice data. It covers functional, API, data, UI/UX, accessibility, compatibility, performance, security, and CI/CD testing.</p>
+  </div>
+  <a class="button button-primary" href="/lab/workflows">Browse scenarios</a>
+</section>
+
+<section class="lab-metric-grid" id="labMetrics" aria-live="polite">
+  <article class="metric-card"><span>Scenarios</span><strong id="labScenarioCount">{{ scenario_count }}</strong><a href="/lab/workflows">Open learning paths</a></article>
+  <article class="metric-card"><span>Synthetic API items</span><strong id="labCatalogCount">...</strong><a href="/lab/api">Test API</a></article>
+  <article class="metric-card"><span>Passed runs</span><strong id="labPassedRuns">...</strong><a href="/lab/runs">Review evidence</a></article>
+  <article class="metric-card"><span>Quality gates</span><strong id="labGateCount">...</strong><a href="/lab/quality">Inspect gates</a></article>
+</section>
+
+<section class="lab-overview-grid">
+  <article class="surface-card lab-hero-card">
+    <p class="eyebrow">START HERE</p>
+    <h2>One product, multiple testing layers.</h2>
+    <ol class="lab-step-list"><li><strong>Functional:</strong> profile, job, tailored resume, application.</li><li><strong>API:</strong> authenticated catalog/order requests and negative cases.</li><li><strong>Data:</strong> ownership, foreign keys, duplicate behavior, status changes.</li><li><strong>Quality:</strong> UI/a11y, performance resilience, security, and CI gate.</li></ol>
+    <div class="form-actions"><a class="button button-secondary" href="/lab/workflows/smoke-workspace">Run smoke scenario</a><a class="text-link" href="/openapi.json" target="_blank">Open OpenAPI JSON</a></div>
+  </article>
+  <article class="surface-card lab-gates-card">
+    <p class="eyebrow">BUILT-IN GUARDRAILS</p>
+    <h2>What is safe to test here</h2>
+    <ul id="labGates"><li>Loading quality gates...</li></ul>
+    <p class="fine-print">The lab does not send test traffic to public job providers, LinkedIn, Google, or any external application target.</p>
+  </article>
+</section>
+
+<section class="section-header compact"><div><p class="eyebrow">RECENT EVIDENCE</p><h2>Latest QA test runs</h2></div><a class="text-link" href="/lab/runs">Record a run</a></section>
+<section class="lab-run-list" id="labRecentRuns"><div class="empty-state"><span class="empty-icon">Q</span><h3>Loading run history...</h3></div></section>
+{% endblock %}

@@ -56,6 +56,15 @@ class CareerCraftTests(unittest.TestCase):
         database = str(Path(self.temp_dir.name) / "career.db")
         app = create_app({"TESTING": True, "DATABASE": database, "SECRET_KEY": "test-secret"})
         self.client = app.test_client()
+        bootstrap = self.client.get("/api/csrf")
+        self.assertEqual(bootstrap.status_code, 200)
+        registered = self.client.post(
+            "/api/auth/register",
+            json={"display_name": "Ava Tester", "email": "ava@example.com", "password": "TestPassword123"},
+            headers={"X-CSRF-Token": bootstrap.json["csrf_token"]},
+        )
+        self.assertEqual(registered.status_code, 201)
+        self.client.environ_base["HTTP_X_CSRF_TOKEN"] = registered.json["csrf_token"]
 
     def tearDown(self) -> None:
         self.temp_dir.cleanup()
@@ -304,6 +313,64 @@ class CareerCraftTests(unittest.TestCase):
         self.assertIn("Compact QA", reply)
         self.assertIn("Ava Tester", reply)
         self.assertIn("Created Selenium regression tests", reply)
+
+    def test_authentication_csrf_and_account_isolation(self) -> None:
+        unauthenticated = create_app({"TESTING": True, "DATABASE": str(Path(self.temp_dir.name) / "career.db"), "SECRET_KEY": "test-secret"}).test_client()
+        self.assertEqual(unauthenticated.get("/api/jobs").status_code, 401)
+        self.assertEqual(unauthenticated.post("/api/jobs", json={"title": "QA Engineer", "description": JOB_DESCRIPTION}).status_code, 401)
+        csrf = unauthenticated.get("/api/csrf").json["csrf_token"]
+        second = unauthenticated.post(
+            "/api/auth/register",
+            json={"display_name": "Second Tester", "email": "second@example.com", "password": "TestPassword456"},
+            headers={"X-CSRF-Token": csrf},
+        )
+        self.assertEqual(second.status_code, 201)
+        self.assertEqual(unauthenticated.post("/api/jobs", json={"title": "QA Engineer", "description": JOB_DESCRIPTION}).status_code, 403)
+        unauthenticated.environ_base["HTTP_X_CSRF_TOKEN"] = second.json["csrf_token"]
+        self.client.put("/api/profile", json=SAMPLE_PROFILE)
+        created = self.client.post("/api/jobs", json={"title": "Private QA role", "description": JOB_DESCRIPTION})
+        self.assertEqual(created.status_code, 201)
+        self.assertEqual(unauthenticated.get("/api/jobs").json["jobs"], [])
+        self.assertEqual(unauthenticated.get(f"/api/jobs/{created.json['job']['id']}").status_code, 404)
+
+    def test_search_run_returns_exact_results_even_when_already_saved(self) -> None:
+        self.client.put("/api/profile", json=SAMPLE_PROFILE)
+        candidate = {
+            "external_id": "fixture:visible", "source": "Fixture", "source_url": "https://example.com/visible",
+            "title": "QA Automation Engineer", "company": "Fixture Labs", "location": "Bengaluru, India", "job_type": "Full-time",
+            "description": JOB_DESCRIPTION, "role_track": "QA Automation", "quality_score": 88, "is_product_company": True,
+        }
+        payload = {"query": "qa automation", "market": "India", "role_track": "All QA tracks", "include_product_boards": True, "force_refresh": True}
+        report = [{"source": "Fixture", "status": "ok", "count": 1}]
+        with patch("app.discover_qa_jobs", return_value=([candidate], report)):
+            first = self.client.post("/api/jobs/discover", json=payload)
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.json["added"], 1)
+        self.assertEqual(len(first.json["results"]), 1)
+        job_id = first.json["results"][0]["id"]
+        self.client.post(f"/api/jobs/{job_id}/decision", json={"status": "approved"})
+        with patch("app.discover_qa_jobs", return_value=([candidate], report)):
+            second = self.client.post("/api/jobs/discover", json=payload)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.json["added"], 0)
+        self.assertEqual(second.json["results"][0]["status"], "approved")
+        run = self.client.get(f"/api/job-search-runs/{second.json['search_run_id']}/results")
+        self.assertEqual(run.status_code, 200)
+        self.assertEqual(run.json["results"][0]["id"], job_id)
+
+    def test_qa_lab_catalog_order_idempotency_and_validation(self) -> None:
+        catalog = self.client.get("/api/lab/catalog")
+        self.assertEqual(catalog.status_code, 200)
+        product_id = catalog.json["items"][0]["id"]
+        payload = {"customer_name": "QA Student", "idempotency_key": "exercise-order-001", "items": [{"product_id": product_id, "quantity": 1}]}
+        created = self.client.post("/api/lab/orders", json=payload)
+        self.assertEqual(created.status_code, 201)
+        repeated = self.client.post("/api/lab/orders", json=payload)
+        self.assertEqual(repeated.status_code, 200)
+        self.assertTrue(repeated.json["idempotent"])
+        self.assertEqual(repeated.json["order"]["id"], created.json["order"]["id"])
+        invalid = self.client.post("/api/lab/orders", json={"customer_name": "QA", "idempotency_key": "exercise-order-002", "items": [{"product_id": product_id, "quantity": 0}]})
+        self.assertEqual(invalid.status_code, 400)
 
 
 if __name__ == "__main__":

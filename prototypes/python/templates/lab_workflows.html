@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - QA Lab workflows{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div><p class="eyebrow">QA LAB WORKFLOWS</p><h1>Build your testing <em>muscle memory</em>.</h1><p class="lede">Each scenario has a clear objective, real CareerCraft/API targets, and a place to save test evidence.</p></div>
+  <a class="button button-secondary" href="/lab/runs">Save a test run</a>
+</section>
+<section class="scenario-grid">
+  {% for scenario in scenarios %}
+  <article class="surface-card scenario-card">
+    <div class="card-title-row"><span class="chip chip-neutral">{{ scenario.area }}</span><span class="subtle-label">{{ scenario.difficulty }}</span></div>
+    <h2>{{ scenario.title }}</h2>
+    <p>{{ scenario.objective }}</p>
+    <ul>{% for check in scenario.checks[:3] %}<li>{{ check }}</li>{% endfor %}</ul>
+    <a class="text-link" href="/lab/workflows/{{ scenario.slug }}">Open scenario &rarr;</a>
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "auth_base.html" %}
+{% block title %}Sign in - CareerCraft{% endblock %}
+{% block page_id %}sign-in{% endblock %}
+{% block content %}
+<p class="eyebrow">WELCOME BACK</p>
+<h2>Sign in to your workspace.</h2>
+<p class="auth-copy">Your profile, saved roles, resumes, and QA Lab records stay separated from every other account.</p>
+<form id="signInForm" class="auth-form" data-next="{{ next_path }}">
+  <label>Email address<input id="signInEmail" type="email" autocomplete="email" required></label>
+  <label>Password<input id="signInPassword" type="password" autocomplete="current-password" required></label>
+  <button class="button button-primary" type="submit">Sign in</button>
+</form>
+<p class="auth-switch">New to CareerCraft? <a href="/sign-up{% if next_path != '/' %}?next={{ next_path | urlencode }}{% endif %}">Create a private account</a></p>
+<p class="fine-print">Five incorrect attempts temporarily lock a known account. Passwords are stored as hashes, never readable text.</p>
+{% endblock %}

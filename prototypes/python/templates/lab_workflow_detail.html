@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - {{ scenario.title }}{% endblock %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow">{{ scenario.area | upper }}</p><h1>{{ scenario.title }}</h1><p class="lede">{{ scenario.objective }}</p></section>
+<section class="workflow-detail-grid">
+  <article class="surface-card workflow-checks"><p class="eyebrow">ACCEPTANCE CHECKS</p><h2>Execute in order</h2><ol>{% for check in scenario.checks %}<li>{{ check }}</li>{% endfor %}</ol></article>
+  <article class="surface-card workflow-targets"><p class="eyebrow">REAL TARGETS</p><h2>Test surface</h2><div class="target-list">{% for target in scenario.targets %}<code>{{ target }}</code>{% endfor %}</div><p class="fine-print">Keep external public job sources out of load/security testing. Use deterministic API data and mocked providers in automation.</p></article>
+</section>
+<section class="surface-card workflow-evidence-card"><div><p class="eyebrow">EVIDENCE</p><h2>Save what happened</h2><p>Record passed, failed, blocked, or in-progress results in the QA Lab. Include the failing condition, actual result, expected result, and a link/reference to your test artifact.</p></div><a class="button button-primary" href="/lab/runs?scenario={{ scenario.slug }}">Record this run</a></section>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a43">
+  <title>{% block title %}CareerCraft account{% endblock %}</title>
+  <link rel="stylesheet" href="/static/styles.css?v=auth-lab-1">
+</head>
+<body class="auth-page" data-page="{% block page_id %}auth{% endblock %}" data-csrf-token="{{ csrf_token }}">
+  <main class="auth-layout">
+    <section class="auth-promise" aria-label="CareerCraft introduction">
+      <a class="brand-lockup auth-brand" href="/sign-in"><span class="brand-mark" aria-hidden="true">C</span><span>Career<span>Craft</span></span></a>
+      <div>
+        <p class="eyebrow">PRIVATE CAREER WORKSPACE</p>
+        <h1>Build the evidence. Test the workflow. <em>Own the next step.</em></h1>
+        <p>Truth-first resumes, source-attributed QA opportunities, and a safe testing lab in one private workspace.</p>
+      </div>
+      <ul class="auth-benefits">
+        <li>Account-owned profile, jobs, applications, and Word versions</li>
+        <li>CSRF-protected changes and password-hashed sign-in</li>
+        <li>Practice API, data, UI, security, and regression testing safely</li>
+      </ul>
+      <p class="auth-signature">Crafted by Vijay Yadav</p>
+    </section>
+    <section class="auth-card surface-card">
+      {% block content %}{% endblock %}
+    </section>
+  </main>
+  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
+  <script src="/static/app.js?v=auth-lab-1" defer></script>
+</body>
+</html>

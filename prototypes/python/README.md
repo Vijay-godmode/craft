@@ -1,6 +1,6 @@
 # CareerCraft
 
-CareerCraft is a local-first, QA-focused resume workspace. It keeps one factual master profile, tailors an ATS-safe Word resume for a real job description, and keeps jobs in an approval-controlled inbox.
+CareerCraft is an authenticated, QA-focused resume workspace and testing playground. It keeps a factual master profile, tailors an ATS-safe Word resume for a real job description, keeps jobs in an approval-controlled inbox, and includes a safe in-app QA Lab.
 
 ## Included workflow
 
@@ -13,6 +13,9 @@ CareerCraft is a local-first, QA-focused resume workspace. It keeps one factual 
 - A reversible close action removes an accidentally approved role from the application queue; closed roles can be restored later.
 - Optional local AI review via Ollama. If Ollama is unavailable, the app labels and uses a built-in local spelling, clarity, and structure review instead. Resume text is never sent to a cloud model by CareerCraft. The Local AI page can propose narrow, reviewable source edits; it cannot access secrets, run commands, or apply changes without confirmation.
 - Manual links to Jobscan, Resume Worded, and Glassdoor research. Uploading to those external services is always your decision.
+- Private accounts with password hashing, signed sessions, CSRF-protected mutations, account-level failed-sign-in lockout, security headers, and per-user profile/job/application/resume isolation. Existing pre-auth local data is claimed by the first account created on that device.
+- Exact persisted discovery runs: the Latest search results panel shows every matching record from the refresh, including records already approved or hidden by the normal inbox tab. It no longer relies on an aggregate source count.
+- QA Lab pages with a per-account synthetic Catalog and Orders API, OpenAPI contract, workflow scenarios, validation/idempotency examples, and saved test-run evidence. It is safe to use for API, functional, data, UI, accessibility, compatibility, performance-resilience, security, and CI/CD practice.
 
 ## LinkedIn boundary
 
@@ -29,6 +32,8 @@ waitress-serve --host=127.0.0.1 --port=8000 app:app
 ```
 
 Open `http://127.0.0.1:8000`.
+
+Create the first account after the upgrade to retain the existing local workspace. Additional accounts receive isolated workspaces.
 
 ## Enable the local LLM (optional)
 
@@ -60,6 +65,6 @@ node --check static\app.js
 
 ## Deployment note
 
-This is a single-user local workspace. Before exposing it publicly, add authentication, per-user database isolation, HTTPS, CSRF protection, rate limits, backups, monitoring, and a secure secret manager. Do not publish the SQLite file or resume exports.
+Authentication, user isolation, CSRF checks, and conservative security headers are included. For a public deployment, still use HTTPS, a durable managed PostgreSQL database, a stable `RESUME_SECRET_KEY`, backups, monitoring, application-level rate limiting, a secure secret manager, and an e-mail provider before adding password reset. Do not publish the SQLite file, `.env`, or resume exports.
 
 Crafted by Vijay Yadav.

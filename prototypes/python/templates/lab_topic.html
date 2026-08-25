@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - {{ topic.eyebrow | title }}{% endblock %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow">{{ topic.eyebrow }}</p><h1>{{ topic.title }}</h1><p class="lede">{{ topic.lede }}</p></section>
+<section class="surface-card topic-check-card"><p class="eyebrow">MEANINGFUL CHECKS</p><h2>Use the current product state</h2><ol>{% for check in topic.checks %}<li>{{ check }}</li>{% endfor %}</ol><div class="form-actions">{% for label, href in topic.links %}<a class="button button-secondary" href="{{ href }}">{{ label }}</a>{% endfor %}</div></section>
+{% endblock %}

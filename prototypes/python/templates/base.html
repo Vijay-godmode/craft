@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102a43">
   <title>{% block title %}CareerCraft{% endblock %}</title>
-  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/styles.css?v=auth-lab-1">
 </head>
-<body data-page="{{ page }}">
+<body data-page="{{ page }}" data-csrf-token="{{ csrf_token }}">
   <div class="app-shell">
     <aside class="sidebar" aria-label="Main navigation">
       <a class="brand-lockup" href="/" aria-label="CareerCraft home">
@@ -22,6 +22,8 @@
         <a href="/jobs" class="nav-item {% if page == 'jobs' %}active{% endif %}"><span aria-hidden="true">⌁</span>Jobs inbox</a>
         <a href="/applications" class="nav-item {% if page == 'applications' %}active{% endif %}"><span aria-hidden="true">✓</span>Applications</a>
         <a href="/assistant" class="nav-item {% if page == 'assistant' %}active{% endif %}"><span aria-hidden="true">AI</span>Local AI</a>
+        <a href="/resumes" class="nav-item {% if page == 'resumes' %}active{% endif %}"><span aria-hidden="true">R</span>Resume library</a>
+        <a href="/lab" class="nav-item {% if page in ['lab', 'lab-api', 'lab-runs'] %}active{% endif %}"><span aria-hidden="true">Q</span>QA Lab</a>
       </nav>
 
       <div class="sidebar-bottom">
@@ -37,6 +39,8 @@
           <p class="topbar-copy">Build truth-first, job-specific resumes.</p>
         </div>
         <div class="topbar-actions">
+          <a class="account-chip" href="/account" aria-label="Open account settings"><span class="account-avatar" aria-hidden="true">{{ current_user.display_name[:1] | upper }}</span><span>{{ current_user.display_name }}</span></a>
+          <button class="text-button topbar-signout" id="signOutButton" type="button">Sign out</button>
           <button class="icon-button" id="enableNotifications" type="button" title="Enable browser job notifications" aria-label="Enable browser notifications">♧</button>
           <a class="button button-dark button-small" href="/builder">Create resume <span aria-hidden="true">→</span></a>
         </div>
@@ -49,6 +53,6 @@
     </main>
   </div>
   <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
-  <script src="/static/app.js" defer></script>
+  <script src="/static/app.js?v=auth-lab-1" defer></script>
 </body>
 </html>

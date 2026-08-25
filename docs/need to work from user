@@ -16,17 +16,18 @@ Current pass — being implemented now
 
 - [x] Map the existing single-user Flask/SQLite application.
 - [x] Install Flask-Login in `prototypes/python/.venv`.
-- [ ] Add account registration, sign-in, sign-out, password hashing, sessions,
+- [x] Add account registration, sign-in, sign-out, password hashing, sessions,
       CSRF protection, account lockout, and user-scoped records.
-- [ ] Preserve existing local profile, jobs, applications, and resume versions
+- [x] Preserve existing local profile, jobs, applications, and resume versions
       by assigning them to the first account created on this device.
-- [x] Fix job refresh visibility: a search must show an immediate Latest search
-      results tray, not just a provider count and a filtered approval queue.
-- [ ] Add a protected QA Lab with a safe internal practice API, data fixtures,
+- [x] Fix job refresh visibility: a search now stores an exact Latest search
+      results tray, separate from the filtered approval queue.
+- [x] Add a protected QA Lab with a safe internal practice API, data fixtures,
       test cases, and saved test runs.
-- [ ] Add tests for authentication, data ownership, CSRF, public-feed result
+- [x] Add tests for authentication, data ownership, CSRF, public-feed result
       rendering, resume export, and QA Lab APIs.
-- [ ] Relaunch locally and verify the end-to-end workflow.
+- [x] Relaunch locally and verify authentication, private page rendering, QA Lab
+      APIs, job-search persistence, and the full automated test suite.
 
 Product map — 17 meaningful routes
 ----------------------------------

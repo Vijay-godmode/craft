@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}CareerCraft - QA Lab API{% endblock %}
+{% block content %}
+<section class="page-heading heading-row"><div><p class="eyebrow">API TESTING LAB</p><h1>Test a real, protected <em>practice API</em>.</h1><p class="lede">The catalog and order endpoints use synthetic per-account data. Use the documented OpenAPI contract, inspect responses, then create both valid and invalid cases.</p></div><a class="button button-secondary" href="/openapi.json" target="_blank">Open OpenAPI JSON</a></section>
+
+<section class="lab-api-grid">
+  <article class="surface-card api-console-card">
+    <div class="card-title-row"><div><p class="eyebrow">CATALOG</p><h2>Synthetic test data</h2></div><button id="refreshLabCatalog" class="text-button" type="button">Refresh</button></div>
+    <p class="fine-print">GET <code>/api/lab/catalog</code> — authenticated endpoint, no mutation.</p>
+    <div id="labCatalogList" class="lab-catalog-list" aria-live="polite"><p>Loading catalog...</p></div>
+  </article>
+  <article class="surface-card api-console-card">
+    <p class="eyebrow">CREATE ORDER</p><h2>Exercise request validation</h2>
+    <p>POST <code>/api/lab/orders</code> with the session CSRF header. This form deliberately validates required values, stock, duplicate lines, and idempotency.</p>
+    <form id="labOrderForm" class="form-grid compact-fields">
+      <label>Customer name<input id="labOrderCustomer" value="QA Practice User" minlength="2" maxlength="120" required></label>
+      <label>Product<input id="labOrderProduct" type="number" min="1" required></label>
+      <label>Quantity<input id="labOrderQuantity" type="number" min="1" max="20" value="1" required></label>
+      <label>Idempotency key<input id="labOrderIdempotency" value="qa-practice-order-001" minlength="8" maxlength="120" required></label>
+      <div class="form-actions"><button class="button button-primary" type="submit">Create synthetic order</button></div>
+    </form>
+    <pre class="api-response" id="labOrderResponse" aria-live="polite">Response will appear here.</pre>
+  </article>
+</section>
+
+<section class="surface-card api-example-card"><div><p class="eyebrow">CONTRACT CHECKLIST</p><h2>Suggested API cases</h2></div><ul><li>GET catalog without a session: expect <code>401</code>.</li><li>POST without <code>X-CSRF-Token</code>: expect <code>403</code>.</li><li>POST an invalid quantity: expect <code>400</code> and a stable <code>error</code> field.</li><li>Repeat an idempotency key: expect <code>200</code> and the same order.</li><li>Use another account: catalog/order IDs must remain private.</li></ul></section>
+{% endblock %}
